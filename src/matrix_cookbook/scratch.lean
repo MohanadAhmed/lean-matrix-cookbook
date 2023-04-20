@@ -17,43 +17,53 @@ lemma one_lt_N_zero_ne {N: ℕ} (hN: 1 < N) : (↑N:ℂ) ≠ (0:ℂ) := begin
   linarith,
 end
 
-lemma complex_exp_neg_one {N: ℕ} {hN: 1 < N}: 
+lemma complex_exp_neg_one {N: ℕ} {hE: 2 < N}: 
   exp ((-2) * ↑π * I / ↑N) ^ (↑N / 2: ℂ) = -1 := 
 begin
   set α := exp(- 2 * π * I / N),
+  have hN : 1 < N, by {linarith,},
   have hα : α ≠ 0, by {apply exp_ne_zero,}, 
   have hxy := cpow_def_of_ne_zero (hα) (N/2: ℂ),
-  -- norm_cast at *,
-  rw hxy,   -- Error Here
+  have hi : (-2) * ↑π * I / ↑N = (-2*π/N)*I, by {ring,},
+  rw hxy,
   change α with exp(- 2 * π * I / N),
   rw log_exp,
-  -- ring_exp,
   have : ((-2) * ↑π * I / ↑N * (↑N / 2)) = -(2*π*I)/2, by {
     rw neg_mul, rw neg_mul,
     ring_nf, rw mul_inv_cancel (one_lt_N_zero_ne hN), rw one_mul,
   },
   rw this, 
   have : -(2 * ↑π * I) / 2 = -↑π * I, by { ring}, rw this,
-  rw neg_mul, rw exp_neg, rw exp_pi_mul_I, ring,
+  rw [neg_mul, exp_neg, exp_pi_mul_I], sorry {ring},
+  
+  rw hi, rw complex.mul_I_im, 
+  norm_cast, rw lt_div_iff, 
+  simp only [neg_mul, int.cast_neg, int.cast_bit0, algebra_map.coe_one, neg_lt_neg_iff], 
+  rw mul_comm, sorry {rw mul_lt_mul_iff_left},
+  
   sorry,
-  sorry,
+
+  rw hi, rw complex.mul_I_im, 
+  norm_cast, rw div_le_iff', 
+  simp only [int.cast_neg, int.cast_bit0, algebra_map.coe_one, neg_mul],
+  rw mul_comm, sorry {rw mul_lt_mul_iff_left},
 end
 
 
-lemma complex_exp_ne_one_if_kn {N:ℕ} {hN: 1 < N} 
-    {k n: fin N} {h: ¬(k = n)} :
-  exp (I * 2 * ↑π * (↑k - ↑n) / ↑N) ≠ 1 :=
-begin
-  by_contra' hE,
-  rw complex.exp_eq_one_iff at hE,
-  cases hE with m hE,
+-- lemma complex_exp_ne_one_if_kn {N:ℕ} {hN: 1 < N} 
+--     {k n: fin N} {h: ¬(k = n)} :
+--   exp (I * 2 * ↑π * (↑k - ↑n) / ↑N) ≠ 1 :=
+-- begin
+--   by_contra' hE,
+--   rw complex.exp_eq_one_iff at hE,
+--   cases hE with m hE,
 
-  have hm1 : I * 2 * ↑π * (↑k - ↑n) / ↑N = (2 * ↑π * I) * ((↑k - ↑n) / ↑N), by ring,
-  have hm2 : ↑m * (2 * ↑π * I) = (2 * ↑π * I) * m, by ring,
+--   have hm1 : I * 2 * ↑π * (↑k - ↑n) / ↑N = (2 * ↑π * I) * ((↑k - ↑n) / ↑N), by ring,
+--   have hm2 : ↑m * (2 * ↑π * I) = (2 * ↑π * I) * m, by ring,
   
-  rw [hm1, hm2, mul_right_inj' two_pi_I_ne_zero] at hE, 
-  rw div_eq_iff at hE,
+--   rw [hm1, hm2, mul_right_inj' two_pi_I_ne_zero] at hE, 
+--   rw div_eq_iff at hE,
   
-  sorry,
-  exact one_lt_N_zero_ne hN,
-end
+--   sorry,
+--   exact one_lt_N_zero_ne hN,
+-- end
