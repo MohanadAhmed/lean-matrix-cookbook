@@ -31,6 +31,22 @@ lemma zero_lt_E :
     rw E, exact real.exp_pos 1,
 end
 
+lemma zero_ne_E :
+  0 ≠ E := begin
+  rw E, exact (real.exp_ne_zero 1).symm,
+end
+
+lemma E_ne_zero :
+  E ≠ 0 := begin
+  rw E, exact (real.exp_ne_zero 1),
+end
+
+lemma E_ne_zero' : (↑E:ℂ) ≠ 0 :=
+begin
+  rw E, rw complex.of_real_exp,
+  exact complex.exp_ne_zero 1,
+end
+
 lemma neg_pi_lt_E :
   -π < E := begin
   have neg_pi_lt_zero : -π < 0, 
@@ -46,17 +62,43 @@ begin
   rw E, rw real.exp_one_rpow,
 end
 
+lemma one_in_piInt_neg : -π < (1:ℂ).im :=
+begin
+  rw [complex.one_im, right.neg_neg_iff],
+  exact real.pi_pos,
+end
+
+lemma one_in_piInt_pos : (1:ℂ).im ≤ π :=
+begin
+  rw [complex.one_im],
+  exact le_of_lt real.pi_pos,
+end
+
+
 lemma E_pow_eq_cexp {x:ℂ}:
   (E:ℂ)^x = complex.exp(x) := 
 begin
   rw [E, complex.cpow_def_of_ne_zero,
     complex.of_real_exp, complex.log_exp],
   simp only [complex.of_real_one, one_mul],
+  exact one_in_piInt_neg,
+  exact one_in_piInt_pos,
+  exact E_ne_zero',
+end
 
-  simp only [complex.of_real_one, complex.one_im, right.neg_neg_iff
-  , real.pi_pos],
-  simp only [complex.of_real_one, complex.one_im],
-  apply le_of_lt, exact real.pi_pos,
-  exact real.exp_ne_zero,
-  
+lemma E_pow_mul_comm {x y : ℂ} 
+  {h1: -π < x.im} {h2: x.im ≤ π}:
+    (E:ℂ)^(x*y) = ((E:ℂ)^x)^y :=
+begin
+  rw complex.cpow_def_of_ne_zero,
+  rw complex.cpow_def_of_ne_zero,
+  rw E_pow_eq_cexp,
+  rw E, rw complex.of_real_exp,
+  rw complex.log_exp h1 h2,
+  rw complex.log_exp,
+  simp only [complex.of_real_one, one_mul],
+  exact one_in_piInt_neg,
+  exact one_in_piInt_pos,
+  rw E_pow_eq_cexp, exact complex.exp_ne_zero x,
+  exact E_ne_zero',
 end
