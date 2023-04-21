@@ -14,14 +14,16 @@ open polynomial
 
 lemma one_lt_N_zero_ne {N: ℕ} (hN: 1 < N) : (↑N:ℂ) ≠ (0:ℂ) := begin
   simp only [ne.def, nat.cast_eq_zero], 
-  linarith,
+  -- linarith,
+  sorry,
 end
 
 lemma complex_exp_neg_one {N: ℕ} {hE: 2 < N}: 
-  exp ((-2) * ↑π * I / ↑N) ^ (↑N / 2: ℂ) = -1 := 
+  exp (-2 * π * I / ↑N) ^ ((↑N: ℂ) / 2) = -1 := 
 begin
   set α := exp(- 2 * π * I / N),
   have hN : 1 < N, by {linarith,},
+  have m0N: ((↑0:ℤ) ≤ ↑N), by norm_num,
   have hα : α ≠ 0, by {apply exp_ne_zero,}, 
   have hxy := cpow_def_of_ne_zero (hα) (N/2: ℂ),
   have hi : (-2) * ↑π * I / ↑N = (-2*π/N)*I, by {ring,},
@@ -31,22 +33,26 @@ begin
   have : ((-2) * ↑π * I / ↑N * (↑N / 2)) = -(2*π*I)/2, by {
     rw neg_mul, rw neg_mul,
     ring_nf, rw mul_inv_cancel (one_lt_N_zero_ne hN), rw one_mul,
+    -- sorry,
   },
   rw this, 
-  have : -(2 * ↑π * I) / 2 = -↑π * I, by { ring}, rw this,
-  rw [neg_mul, exp_neg, exp_pi_mul_I], sorry {ring},
+  have : -(2 * ↑π * I) / 2 = -↑π * I, by { ring,}, rw this,
+  rw [neg_mul, exp_neg, exp_pi_mul_I], sorry,
   
   rw hi, rw complex.mul_I_im, 
   norm_cast, rw lt_div_iff, 
   simp only [neg_mul, int.cast_neg, int.cast_bit0, algebra_map.coe_one, neg_lt_neg_iff], 
-  rw mul_comm, sorry {rw mul_lt_mul_iff_left},
   
-  sorry,
-
+  
+  rw mul_comm,  rw   mul_lt_mul_left real.pi_pos,
+  norm_cast, exact hE, simp only [nat.cast_pos], linarith only [hE],
+  
   rw hi, rw complex.mul_I_im, 
-  norm_cast, rw div_le_iff', 
-  simp only [int.cast_neg, int.cast_bit0, algebra_map.coe_one, neg_mul],
-  rw mul_comm, sorry {rw mul_lt_mul_iff_left},
+  norm_cast, rw div_le_iff',
+  rw mul_le_mul_right real.pi_pos,
+  have m20: (-2 ≤ (↑0:ℤ)), by norm_num,
+  norm_cast,
+  exact le_trans m20 m0N, norm_cast, linarith,
 end
 
 
