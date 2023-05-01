@@ -168,46 +168,21 @@ open equiv equiv.perm finset
 open complex
 open polynomial
 
-lemma vec_eq_vec_iff (v w: n → R) : 
-  v = w ↔ ∀ k : n, v k = w k := 
-begin
-  split,
-  intros h k, rw h,
-
-  intros h, ext k,
-  specialize h k, exact h,
-end
-
-lemma mat_eq_mat_iff (v w: matrix m n R) : 
-  v = w ↔ ∀ (j: m)(k: n), v j k = w j k:= 
-begin
-  split,
-  rintros h i j, rw h at *,
-  intro h,
-  ext i j, specialize h i j, exact h,
-end
-
--- variable {N: ℕ}
-/- Are we really forced to have the DFT matrix 
-noncomputable because the complex exponnetial function is 
-non-computable?
--/
-
 -- eq_403 : Twiddle Factors
 noncomputable def Wkn {N: ℕ} (k n: fin N) : ℂ :=  
-complex.exp(complex.I * 2 * π * k * n / N)
+exp(2 * π * I * k * n / N)
 
 -- Forward DFT Matrix
 noncomputable def W_N {N: ℕ}: matrix (fin N) (fin N) ℂ :=
-λ (k n: fin N), Wkn k n
+of $ λ k n, Wkn k n
 
 -- Inverse Twiddle Factors
 noncomputable def iWkn {N: ℕ} (k n: fin N) : ℂ :=  
-complex.exp(-complex.I * 2 * π * k * n / N)
+exp(- 2 * π * I * k * n / N)
 
 -- Inverse DFT Matrix
 noncomputable def iW_N {N: ℕ} : matrix (fin N) (fin N) ℂ :=
-λ (k n: fin N), iWkn k n
+of $ λ k n, iWkn k n
 
 -- eq_404
 noncomputable def dft {N: ℕ} (x: (fin N) → ℂ) : (fin N → ℂ) := 
@@ -219,19 +194,11 @@ noncomputable def idft {N: ℕ} (X: (fin N) → ℂ) : (fin N → ℂ) :=
 
 lemma eq_406 {N: ℕ} (x: fin N → ℂ) : 
 dft x = matrix.mul_vec W_N x := 
-begin
-  rw vec_eq_vec_iff, intro k,
-  rw [dft, matrix.mul_vec, dot_product],
-  refl,
-end
+by {funext k, rw [dft], refl}
 
 lemma eq_407 {N: ℕ} (X: fin N → ℂ) : 
 idft X = (matrix.mul_vec ((1/N)•iW_N) X) := 
-begin
-  rw vec_eq_vec_iff, intro k,
-  rw [idft, matrix.mul_vec, dot_product],
-  refl,
-end
+by {funext k, rw [idft],refl}
 
 lemma twiddle_comm {N: ℕ}(k n: fin N) :
   Wkn k n = Wkn n k := begin
@@ -247,16 +214,16 @@ end
 
 @[simp] lemma twiddle_mul {N:ℕ} (j k l: fin N) :
   Wkn j k * iWkn k l = 
-    (exp(I * 2 * π * (j - l) / N)) ^ (k:ℕ) :=
+    (exp(2 * π * I * (j - l) / N)) ^ (k:ℕ) :=
 begin
-  rw Wkn, rw iWkn, 
-  rw ← exp_add, 
-  have : I * 2 * π * j * k / N + -I * 2 * π * k * l / N = 
-    I * 2 * π * (j - l)*k / N, by ring, rw this, 
-  set rt := I * 2 * π * (j - l), 
-  have : rt * ↑k / ↑N = (rt / N) * k, by ring, rw this,
-  rw mul_comm, 
-  exact exp_int_mul _ _,
+  rw [Wkn, iWkn],
+  rw ← exp_add, simp only [ neg_mul], rw neg_div,
+  rw ← sub_eq_add_neg,
+
+  have : 2 * ↑π * I * j * k / N - 2 * ↑π * I * k * l / N
+   =  k * (2 * π * I * (j - l) / N), by ring,
+   rw this,
+   exact exp_int_mul _ _,
 end
 
 lemma W_N_symmetric {N: ℕ} :
@@ -273,48 +240,11 @@ begin
   simp only [twiddle_cancel,sum_const, card_fin, nat.smul_one_eq_coe],
 end
 
--- lemma sum_finN_sum_rangeN {N:ℕ} (f: ℕ → ℂ):
---   ∑ (i : fin N), f i = ∑ i in (range N), f i := 
--- begin 
---   rw fin.sum_univ_eq_sum_range,
--- end
-
--- lemma geom_sum_finN {N:ℕ} {hN: 1 < N} (α: ℂ) (hα: α ≠ 1) : 
--- ∑ (i : fin N), α ^ (i:ℕ) = (α^N - 1) / (α - 1) := 
--- begin
---   -- rw geom_sum_eq,
---   sorry,
--- end
-
--- lemma  two_pi_ne_zero : (2 * ↑π * I) ≠ (0:ℂ) := 
--- by {
---   simp only [ne.def, mul_eq_zero, bit0_eq_zero, 
---     one_ne_zero, of_real_eq_zero, false_or], 
---   push_neg, refine ⟨real.pi_ne_zero, complex.I_ne_zero⟩, 
--- }
-
 lemma one_lt_N_zero_ne {N: ℕ} (hN: 1 < N) : (↑N:ℂ) ≠ (0:ℂ) := begin
   simp only [ne.def, nat.cast_eq_zero], 
   linarith,
 end
 
-lemma complex_exp_ne_one_if_kn {N:ℕ} {hN: 1 < N} 
-    {k n: fin N} {h: ¬(k = n)} :
-  exp (I * 2 * ↑π * (↑k - ↑n) / ↑N) ≠ 1 :=
-begin
-  by_contra' hE,
-  rw complex.exp_eq_one_iff at hE,
-  cases hE with m hE,
-
-  have hm1 : I * 2 * ↑π * (↑k - ↑n) / ↑N = (2 * ↑π * I) * ((↑k - ↑n) / ↑N), by ring,
-  have hm2 : ↑m * (2 * ↑π * I) = (2 * ↑π * I) * m, by ring,
-  
-  rw [hm1, hm2, mul_right_inj' two_pi_I_ne_zero] at hE, 
-  rw div_eq_iff at hE,
-  
-  sorry,
-  exact one_lt_N_zero_ne hN,
-end
 
 lemma Wkn_dot_iWKn_offdiag {N:ℕ} {hN: 1 < N} (k n: fin N) (h: ¬(k = n)) :
   ∑ (i : fin N), Wkn k i * iWkn i n = 0 := 
@@ -324,19 +254,35 @@ begin
   rw geom_sum_eq, 
   simp only [_root_.div_eq_zero_iff],
   left,
-  rw sub_eq_zero, set α := I * 2 * ↑π * (↑k - ↑n) / ↑N,
+  rw sub_eq_zero, 
+
   simp_rw [← complex.exp_nat_mul, mul_comm ↑N _],
-  
-  rw div_mul_cancel, 
-  have : I * 2 * ↑π * (↑k - ↑n) = (↑k - ↑n) * ( 2 * ↑π * I), by ring,
-  rw this, 
+  rw [div_mul_cancel, mul_comm],
+
   have : (↑k - ↑n) * ( 2 * ↑π * I) = ((↑k - ↑n):ℤ) * ( 2 * ↑π * I), 
   by { simp only [coe_coe, int.cast_sub, int.cast_coe_nat],},
   rw this,
   
   apply exp_int_mul_two_pi_mul_I, 
   exact one_lt_N_zero_ne hN,
-  apply complex_exp_ne_one_if_kn , assumption',
+  by_contra hc,
+  apply_fun log at hc,
+  rw [log_one, log_exp] at hc,
+
+  simp only [coe_coe, _root_.div_eq_zero_iff, mul_eq_zero, bit0_eq_zero, 
+    one_ne_zero, of_real_eq_zero, false_or, nat.cast_eq_zero] at hc, 
+  cases hc with hc hNz,
+  cases hc with hc hkn,
+  cases hc with hpi hI,
+  exact real.pi_ne_zero hpi,
+  exact I_ne_zero hI,
+  simp_rw [← coe_coe] at hkn, 
+  rw int.sub_eq_zero_iff_eq at hkn,
+  simp only [coe_coe, nat.cast_inj] at *,
+  rw fin.coe_eq_coe at hkn,
+  exact h hkn,
+  
+  -- extract_goal,
 end
 
 lemma eq_408 {N: ℕ} {h: 1 ≤ N} : 
