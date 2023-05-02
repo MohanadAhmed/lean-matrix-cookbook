@@ -46,15 +46,16 @@ begin
 
   simp_rw [← complex.exp_nat_mul, mul_comm ↑N _],
   rw [div_mul_cancel, mul_comm],
+
   rw complex.exp_eq_one_iff, use (↑k:ℤ) - ↑n,
   simp only [coe_coe, int.cast_sub, int.cast_coe_nat], 
   exact hN_ne_zero,
-  
+
   -- have : (↑k - ↑n) * ( 2 * ↑π * I) = ((↑k - ↑n):ℤ) * ( 2 * ↑π * I), 
   -- by { simp only [coe_coe, int.cast_sub, int.cast_coe_nat],},
   -- rw this,
   -- apply exp_int_mul_two_pi_mul_I, 
-  
+  -- exact hN_ne_zero,
   
   by_contra hc,
   rw complex.exp_eq_one_iff at hc,
@@ -71,7 +72,7 @@ begin
   
   set ak : ℕ := ↑k,
   set an : ℕ := ↑n,
-  rw (div_eq_iff_mul_eq) at hm,
+  rw (div_eq_iff_mul_eq hN_ne_zero) at hm,
   rw @coe_coe (ℕ) ℤ ℂ _ _ ak at hm,
   rw @coe_coe (ℕ) ℤ ℂ _ _ an at hm,
   rw @coe_coe ℕ ℤ ℂ _ _ N at hm,
@@ -93,5 +94,4 @@ begin
   exact h_k_ne_n hm,
   simp only [fin.is_lt],
   simp only [fin.is_lt],
-  simp only [ne.def, nat.cast_eq_zero], exact hN,
 end
