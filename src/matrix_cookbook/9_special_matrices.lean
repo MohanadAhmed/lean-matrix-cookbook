@@ -18,7 +18,7 @@ variables [decidable_eq l] [decidable_eq m] [decidable_eq n] [decidable_eq p] [d
 variables [field R]
 
 open matrix
-open_locale matrix big_operators
+open_locale matrix big_operators complex_conjugate
 open equiv equiv.perm finset
 
 namespace matrix_cookbook
@@ -205,6 +205,21 @@ lemma twiddle_comm {N: ℕ}(k n: fin N) :
   rw Wkn,rw Wkn, ring_nf,
 end
 
+lemma twiddle_conj {N: ℕ}(k n: fin N) :
+  iWkn k n = star (Wkn k n) := 
+begin
+  rw Wkn,rw iWkn,
+  rw star_def, 
+  rw ← exp_conj, 
+  -- ring_exp,
+  rw exp_eq_exp_iff_exists_int,
+  use 0, 
+  simp only [neg_mul, coe_coe, map_div₀, _root_.map_mul, 
+  is_R_or_C.conj_bit0, _root_.map_one, 
+  is_R_or_C.conj_of_real, conj_I, 
+  mul_neg, map_nat_cast, algebra_map.coe_zero, zero_mul, add_zero],
+end
+
 @[simp] lemma twiddle_cancel {N:ℕ} (k n: fin N) :
   Wkn n k * iWkn k n = 1 :=
 begin
@@ -245,10 +260,13 @@ lemma one_lt_N_zero_ne {N: ℕ} (hN: 1 < N) : (↑N:ℂ) ≠ (0:ℂ) := begin
   linarith,
 end
 
-
-lemma Wkn_dot_iWKn_offdiag {N:ℕ} {hN: 1 < N} (k n: fin N) (h: ¬(k = n)) :
-  ∑ (i : fin N), Wkn k i * iWkn i n = 0 := 
+lemma Wkn_dot_iWKn_offdiag {N:ℕ} {hN: N ≠ 0} 
+  {k n: fin N} {h_k_ne_n: ¬(k = n)} :
+    ∑ (i : fin N), Wkn k i * iWkn i n = 0 := 
 begin
+  have hN_ne_zero : (↑N:ℂ) ≠ 0, 
+    by { simp only [ne.def, nat.cast_eq_zero], exact hN,},
+  
   simp_rw [twiddle_mul],
   rw fin.sum_univ_eq_sum_range,
   rw geom_sum_eq, 
@@ -259,76 +277,126 @@ begin
   simp_rw [← complex.exp_nat_mul, mul_comm ↑N _],
   rw [div_mul_cancel, mul_comm],
 
-  have : (↑k - ↑n) * ( 2 * ↑π * I) = ((↑k - ↑n):ℤ) * ( 2 * ↑π * I), 
-  by { simp only [coe_coe, int.cast_sub, int.cast_coe_nat],},
-  rw this,
-  
-  apply exp_int_mul_two_pi_mul_I, 
-  exact one_lt_N_zero_ne hN,
-  by_contra hc,
-  apply_fun log at hc,
-  rw [log_one, log_exp] at hc,
+  rw complex.exp_eq_one_iff, use (↑k:ℤ) - ↑n,
+  simp only [coe_coe, int.cast_sub, int.cast_coe_nat], 
+  exact hN_ne_zero,
 
-  simp only [coe_coe, _root_.div_eq_zero_iff, mul_eq_zero, bit0_eq_zero, 
-    one_ne_zero, of_real_eq_zero, false_or, nat.cast_eq_zero] at hc, 
-  cases hc with hc hNz,
-  cases hc with hc hkn,
-  cases hc with hpi hI,
-  exact real.pi_ne_zero hpi,
-  exact I_ne_zero hI,
-  simp_rw [← coe_coe] at hkn, 
-  rw int.sub_eq_zero_iff_eq at hkn,
-  simp only [coe_coe, nat.cast_inj] at *,
-  rw fin.coe_eq_coe at hkn,
-  exact h hkn,
+  -- have : (↑k - ↑n) * ( 2 * ↑π * I) = ((↑k - ↑n):ℤ) * ( 2 * ↑π * I), 
+  -- by { simp only [coe_coe, int.cast_sub, int.cast_coe_nat],},
+  -- rw this,
+  -- apply exp_int_mul_two_pi_mul_I, 
+  -- exact hN_ne_zero,
   
-  -- extract_goal,
+  by_contra hc,
+  rw complex.exp_eq_one_iff at hc,
+  cases hc with m hm,
+  set α := 2*↑π*I,
+  set β:ℂ := ↑k - ↑n,
+  
+  rw [mul_comm _ α] at hm, 
+  rw mul_div_assoc at hm,
+  rw (mul_right_inj' two_pi_I_ne_zero) at hm,
+  
+  change β with ↑k - ↑n at hm,
+  simp only [coe_coe] at hm,
+  
+  set ak : ℕ := ↑k,
+  set an : ℕ := ↑n,
+  rw (div_eq_iff_mul_eq hN_ne_zero) at hm,
+  rw @coe_coe (ℕ) ℤ ℂ _ _ ak at hm,
+  rw @coe_coe (ℕ) ℤ ℂ _ _ an at hm,
+  rw @coe_coe ℕ ℤ ℂ _ _ N at hm,
+  set aN : ℤ := ↑N,
+  rw ← int.cast_sub (↑ak) (↑an) at hm,
+  rw ← int.cast_mul m aN at hm,
+  rw int.cast_inj at hm,
+  apply_fun (% N) at hm, 
+  simp only [int.mul_mod_left] at hm,
+  
+  replace hm := hm.symm,
+  
+  rw ← int.mod_eq_mod_iff_mod_sub_eq_zero at hm,
+  norm_cast at hm,
+  change ak with ↑k at hm, change an with ↑n at hm,
+  rw (nat.mod_eq_iff_lt hN).2 at hm,
+  rw (nat.mod_eq_iff_lt hN).2 at hm,
+  rw fin.coe_eq_coe at hm,
+  exact h_k_ne_n hm,
+  simp only [fin.is_lt],
+  simp only [fin.is_lt],
 end
 
-lemma eq_408 {N: ℕ} {h: 1 ≤ N} : 
+lemma W_N_mul_iW_N {N: ℕ} {hN: N ≠ 0} : 
+(W_N) ⬝ (iW_N) = 
+  (N)•(1: matrix (fin N) (fin N) ℂ) := 
+begin
+  funext k n,
+  rw W_N, rw iW_N,
+  rw matrix.mul, simp only [dot_product],
+
+  by_cases hkn: (k = n), rw hkn,
+  
+  rw [pi.smul_apply, pi.smul_apply],
+  rw one_apply_eq, rw nat.smul_one_eq_coe,
+  
+  simp only [of_apply],
+  apply Wkn_dot_iWkn_diag,
+  
+  rw [pi.smul_apply, pi.smul_apply],
+  rw one_apply_ne, rw smul_zero,
+
+  simp only [of_apply],
+  apply Wkn_dot_iWKn_offdiag,
+
+  exact hN, assumption, assumption,
+end
+
+
+lemma eq_408 {N: ℕ} {hN: N ≠ 0} : 
+  -- let η : ℂ := (1/↑N),
 (W_N : matrix (fin N) (fin N) ℂ)⁻¹ = 
-  (1/N)•(W_Nᴴ)ᵀ :=
+  (N:ℂ)⁻¹ • (W_Nᵀ)ᴴ :=
 -- Seems star means hermitian and not just conjugate
 begin
-  rw inv_eq_left_inv,
-  funext k n, 
-  rw matrix.mul, simp only [dot_product],
-  simp only [nsmul_eq_mul, mul_eq_mul],
-  
-  by_cases (k = n),
-  rw W_N, 
-  rw [h], simp only [one_apply_eq],
-  sorry,
-  
+have hW : (iW_N: matrix (fin N) (fin N) ℂ) = W_Nᴴ, by {
+  rw iW_N,
+  rw W_N,
+  simp only [of_apply],
+  funext k n,
+  rw conj_transpose_apply,
+  simp only [of_apply],
+  rw twiddle_comm,
+  apply twiddle_conj,
+},
+
+
+rw ← W_N_symmetric,
+rw inv_eq_right_inv,
+rw ← hW,
+rw matrix.mul_smul,
+rw W_N_mul_iW_N, 
+
+funext k n,
+rw pi.smul_apply,
+rw pi.smul_apply,
+rw pi.smul_apply,
+rw pi.smul_apply,
+by_cases hkn: (k=n), rw hkn, 
+rw one_apply_eq,
+simp only [nat.smul_one_eq_coe, algebra.id.smul_eq_mul],
+rw mul_comm,rw mul_inv_cancel, rw nat.cast_ne_zero, exact hN,
+rw one_apply_ne,
+rw smul_zero,
+rw smul_zero, exact hkn, exact hN,
+
 end
 
-lemma eq_409 {N: ℕ} {h: 1 ≤ N} : 
+lemma eq_409 {N: ℕ} {hN: N ≠ 0} : 
 (W_N) ⬝ (iW_N) = 
-  N•(1: matrix (fin N) (fin N) ℂ) := 
+  (N)•(1: matrix (fin N) (fin N) ℂ) := 
 begin
-  
-  rw W_N, rw iW_N,
-  by_cases hNl1: (1 < N),
-    funext k n,
-    by_cases (k = n),
-    rw matrix.mul, simp only [dot_product],
-    rw [h, Wkn_dot_iWkn_diag],  
-    simp only [nat.smul_one_eq_coe, pi.smul_apply, one_apply_eq],
-
-    -- !(k = n)
-    rw matrix.mul, simp only [dot_product],
-    rw Wkn_dot_iWKn_offdiag  _ _ h ,  
-    rw [pi.smul_apply,pi.smul_apply, one_apply_ne h, smul_zero],
-    exact hNl1,
-
-  have hN1: 1 = N, exact eq_of_le_of_not_lt h hNl1, 
-  rw matrix.mul, simp only [dot_product],
-  rw ← hN1 at *,
-  funext k n, fin_cases k, fin_cases n, 
-  simp only [ -- Whatever this is, it is too much!!!
-    fintype.univ_of_subsingleton, twiddle_mul, sub_self, mul_zero, 
-    zero_div, exp_zero, one_pow, sum_const, card_singleton,
-    nat.smul_one_eq_coe, nat.cast_one, one_apply_eq],
+  apply W_N_mul_iW_N,
+  exact hN,
 end
 
 lemma eq_410 {N: ℕ} : 
