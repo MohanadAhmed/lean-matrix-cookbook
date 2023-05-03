@@ -42,7 +42,7 @@ begin
 end
 
 lemma two_pi_I_by_N_piInt_neg {N : ℕ}
-  (h2 : 2 ≤ N) :
+  (h2 : 2 < N) :
   -π < ((2) * ↑π * I / ↑N).im :=
 begin
   have : (2) * ↑π * I / ↑N = (((2) * ↑π / ↑N)) * I, by {ring,},
@@ -71,8 +71,8 @@ begin
 end
 
 lemma two_pi_I_by_N_piInt_pos {N : ℕ}
-  (h2 : 2 ≤ N) :
-  (2 * ↑π * I / ↑N).im ≤ π :=
+  (h2 : 2 < N) :
+  (2 * ↑π * I / ↑N).im < π :=
 begin
   have hNlt0 : 0 < (N:ℝ), by {
     simp only [nat.cast_pos],
@@ -84,12 +84,12 @@ begin
   have : ((2 * ↑π) / ↑N:ℂ).re = ((2 * π) / ↑N) , 
   by {norm_cast,}, rw this,
 
-  rw div_le_iff hNlt0, rw mul_comm, 
-  rw mul_le_mul_left real.pi_pos,
+  rw div_lt_iff hNlt0, rw mul_comm, 
+  rw mul_lt_mul_left real.pi_pos,
   norm_cast, exact h2,
 end
 
-lemma twiddle_half_cycle_eq_neg {N: ℕ} {hN: 2 ≤ N}:
+lemma twiddle_half_cycle_eq_neg {N: ℕ} {hN: 2 < N}:
   exp(2 * π * I / N)^((N:ℂ)/(2:ℂ)) = 
   -1 :=
 begin
@@ -104,6 +104,30 @@ begin
   rw mul_comm, 
   rw exp_pi_mul_I,
   exact two_pi_I_by_N_piInt_neg hN,
-  exact two_pi_I_by_N_piInt_pos hN,
+  exact le_of_lt (two_pi_I_by_N_piInt_pos hN),
   exact exp_ne_zero (2 * π * I / N),
+end
+
+lemma twiddle_neg_half_cycle_eq_neg' {N: ℕ} {hN: 2 < N}:
+  exp(-2 * π * I / N)^((N:ℂ)/(2:ℂ)) = 
+  -1 :=
+begin
+  rw cpow_def_of_ne_zero,
+  rw log_exp,
+  rw div_mul,
+  set η:ℂ := ↑N,
+  have hη: η ≠ 0, 
+    by {simp only [nat.cast_ne_zero], linarith,},
+
+  rw div_div_cancel' hη, ring_nf,
+  rw mul_comm, rw exp_neg,
+  rw exp_pi_mul_I, norm_num,
+  rw neg_mul, rw neg_mul, rw neg_div, rw neg_im,
+  rw neg_lt_neg_iff,
+  exact two_pi_I_by_N_piInt_pos hN,
+  
+  rw neg_mul, rw neg_mul, rw neg_div, rw neg_im,
+  rw neg_le,
+  exact (le_of_lt (two_pi_I_by_N_piInt_neg hN)),
+  exact exp_ne_zero ((-2) * π * I / N),
 end
