@@ -412,16 +412,22 @@ lemma eq_411 {N: ℕ} {m: ℤ} :
     -complex.exp(-2 * π * I / N) ^ (m:ℂ)  := 
 begin
 
-  have hne: exp ((-2) * ↑π * I / ↑N) ^ (↑N / 2) = -1, by {
-    sorry,
-  },
+  -- have hne: complex.exp ( -2 * π * I / (↑N:ℂ)) ^ (↑N:ℂ / 2) 
+  --   = -1, by {
+  --   sorry,
+  -- },
 
   set α := exp(- 2 * π * I / N),
   rw complex.cpow_add,
   simp only [cpow_int_cast],
   rw ← neg_one_mul, rw mul_comm,
   rw mul_left_inj',
-  apply hne,
+  
+  
+  rw cpow_def_of_ne_zero,
+  change α with exp(- 2 * π * I / N),
+  rw log_exp, ring_nf, rw complex.mul_inv_cancel,
+  
   
   -- calc exp (↑(m + ↑N / 2) * fac) 
   --         = exp (↑m * fac + (↑N / 2) * fac) : by { 
