@@ -108,10 +108,22 @@ begin
   exact exp_ne_zero (2 * π * I / N),
 end
 
-lemma twiddle_neg_half_cycle_eq_neg' {N: ℕ} {hN: 2 < N}:
+lemma twiddle_neg_half_cycle_eq_neg' {N: ℕ} {hN: 2 ≤ N}:
   exp(-2 * π * I / N)^((N:ℂ)/(2:ℂ)) = 
   -1 :=
 begin
+  by_cases h2: (N = 2),
+  rw h2, ring_nf,
+  have: (1/(2:ℂ)*↑2) = 1, by {
+    simp only [one_div, nat.cast_bit0, 
+    algebra_map.coe_one,
+     inv_mul_cancel_of_invertible],
+  },
+  rw this, simp only [cpow_one], rw exp_neg,
+  rw mul_comm, rw exp_pi_mul_I,
+  norm_num,
+  rw le_iff_lt_or_eq at hN,
+  cases hN with hNlt2 hNeq2,
   rw cpow_def_of_ne_zero,
   rw log_exp,
   rw div_mul,
@@ -124,10 +136,28 @@ begin
   rw exp_pi_mul_I, norm_num,
   rw neg_mul, rw neg_mul, rw neg_div, rw neg_im,
   rw neg_lt_neg_iff,
-  exact two_pi_I_by_N_piInt_pos hN,
+  exact two_pi_I_by_N_piInt_pos hNlt2,
   
   rw neg_mul, rw neg_mul, rw neg_div, rw neg_im,
   rw neg_le,
-  exact (le_of_lt (two_pi_I_by_N_piInt_neg hN)),
+  exact (le_of_lt (two_pi_I_by_N_piInt_neg hNlt2)),
   exact exp_ne_zero ((-2) * π * I / N),
+  exfalso, exact h2 hNeq2.symm,
+end
+
+lemma eq_411 {N: ℕ}{h2: 2 ≤ N} {m: ℤ} : 
+  let Wₙ := complex.exp(-2 * π * I  / N) in
+  Wₙ ^ (m + N/2: ℂ)  = -Wₙ ^ (m:ℂ)  := 
+begin
+  dsimp only,
+  set α := exp(- 2 * π * I / N),
+  rw complex.cpow_add,
+  simp only [cpow_int_cast],
+  rw ← neg_one_mul, rw mul_comm,
+  rw mul_left_inj',
+  apply twiddle_neg_half_cycle_eq_neg',
+  exact h2,
+  rw ← exp_int_mul, ring_nf,
+  exact exp_ne_zero (-(2 * (↑N)⁻¹ * I * ↑π * ↑m)),
+  exact exp_ne_zero (- 2 * π * I / N),
 end
