@@ -161,3 +161,49 @@ begin
   exact exp_ne_zero (-(2 * (↑N)⁻¹ * I * ↑π * ↑m)),
   exact exp_ne_zero (- 2 * π * I / N),
 end
+
+lemma eq_411_m_real {N: ℕ}{h2: 2 ≤ N} {m: ℂ} : 
+  let Wₙ := complex.exp(-2 * π * I  / N) in
+  Wₙ ^ (m + N/2: ℂ)  = -Wₙ ^ (m:ℂ)  := 
+begin
+  dsimp only,
+  set α := exp(- 2 * π * I / N),
+  have hα: α ≠ 0, by exact exp_ne_zero ((-2) * ↑π * I / ↑N),
+  
+  rw complex.cpow_add,
+  rw ← neg_one_mul, rw mul_comm,
+  rw mul_left_inj',
+  apply twiddle_neg_half_cycle_eq_neg',
+  exact h2,
+  rw cpow_def_of_ne_zero,
+  apply exp_ne_zero _,
+  assumption',
+end
+
+lemma eq_411_ints {N: ℕ}{h2: 2 ≤ N} {m: ℤ} : 
+  let Wₙ := complex.exp(-2 * π * I  / N) in
+  Wₙ ^ (m + N/2: ℂ)  = -Wₙ ^ (m:ℂ)  := 
+begin
+  apply eq_411_m_real, exact h2,
+end
+
+-- lemma eq_411_one {N: ℕ}{h2: 1 = N} {m: ℤ} : 
+--   let Wₙ := complex.exp(-2 * π * I  / N) in
+--   Wₙ ^ (m + N/2: ℂ)  = -Wₙ ^ (m:ℂ)  := 
+-- begin
+--   dsimp,
+--   set α := exp(- 2 * π * I / N),
+--   have hα: α ≠ 0, by exact exp_ne_zero ((-2) * ↑π * I / ↑N),
+--   rw complex.cpow_add,
+--   rw ← neg_one_mul, rw mul_comm,
+--   rw mul_left_inj',
+--   rw ← h2 at *, 
+--   -- change α with 
+--   rw cpow_def_of_ne_zero,
+--   change α with exp(- 2 * π * I / ↑N), rw ← h2 at *, 
+--   simp only [neg_mul, algebra_map.coe_one, div_one, one_div],
+--   rw ← cpow_def_of_ne_zero, rw exp_neg, rw exp_two_pi_mul_I,
+--   -- ring_nf,
+  
+-- end
+

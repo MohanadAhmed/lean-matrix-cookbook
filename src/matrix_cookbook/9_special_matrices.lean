@@ -281,12 +281,6 @@ begin
   simp only [coe_coe, int.cast_sub, int.cast_coe_nat], 
   exact hN_ne_zero,
 
-  -- have : (↑k - ↑n) * ( 2 * ↑π * I) = ((↑k - ↑n):ℤ) * ( 2 * ↑π * I), 
-  -- by { simp only [coe_coe, int.cast_sub, int.cast_coe_nat],},
-  -- rw this,
-  -- apply exp_int_mul_two_pi_mul_I, 
-  -- exact hN_ne_zero,
-  
   by_contra hc,
   rw complex.exp_eq_one_iff at hc,
   cases hc with m hm,
@@ -303,8 +297,8 @@ begin
   set ak : ℕ := ↑k,
   set an : ℕ := ↑n,
   rw (div_eq_iff_mul_eq hN_ne_zero) at hm,
-  rw @coe_coe (ℕ) ℤ ℂ _ _ ak at hm,
-  rw @coe_coe (ℕ) ℤ ℂ _ _ an at hm,
+  rw @coe_coe ℕ ℤ ℂ _ _ ak at hm,
+  rw @coe_coe ℕ ℤ ℂ _ _ an at hm,
   rw @coe_coe ℕ ℤ ℂ _ _ N at hm,
   set aN : ℤ := ↑N,
   rw ← int.cast_sub (↑ak) (↑an) at hm,
@@ -407,38 +401,23 @@ end
 
 noncomputable def W11 {N : ℕ} : ℂ := complex.exp(-complex.I * 2 * π / N)
 
-lemma eq_411 {N: ℕ} {m: ℤ} : 
-  complex.exp(-2 * π * I  / N) ^ (m + N/2: ℂ)  = 
-    -complex.exp(-2 * π * I / N) ^ (m:ℂ)  := 
+lemma eq_411 {N: ℕ}{h2: 2 ≤ N} {m: ℤ} : 
+  let Wₙ := complex.exp(-2 * π * I  / N) in
+  Wₙ ^ (m + N/2: ℂ)  = -Wₙ ^ (m:ℂ)  := 
 begin
-
-  -- have hne: complex.exp ( -2 * π * I / (↑N:ℂ)) ^ (↑N:ℂ / 2) 
-  --   = -1, by {
-  --   sorry,
-  -- },
-
+  dsimp only,
   set α := exp(- 2 * π * I / N),
   rw complex.cpow_add,
   simp only [cpow_int_cast],
   rw ← neg_one_mul, rw mul_comm,
   rw mul_left_inj',
-  
-  
-  rw cpow_def_of_ne_zero,
-  change α with exp(- 2 * π * I / N),
-  rw log_exp, ring_nf, rw complex.mul_inv_cancel,
-  
-  
-  -- calc exp (↑(m + ↑N / 2) * fac) 
-  --         = exp (↑m * fac + (↑N / 2) * fac) : by { 
-  --           have : ↑(m + ↑N / 2) * fac = ↑m * fac + ↑N / 2 * fac, by {
-  --           },
-  --          }
-  -- ...     = -exp fac ^ m : by { 
-  --   sorry,
-  -- },
-  
+  apply twiddle_neg_half_cycle_eq_neg',
+  exact h2,
+  rw ← exp_int_mul, ring_nf,
+  exact exp_ne_zero (-(2 * (↑N)⁻¹ * I * ↑π * ↑m)),
+  exact exp_ne_zero (- 2 * π * I / N),
 end
+
 lemma eq_412 : sorry := sorry
 
 end dft_matrices
