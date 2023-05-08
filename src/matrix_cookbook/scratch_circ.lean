@@ -94,7 +94,7 @@ end
 
 lemma twiddle_sum {N: ℕ}(k m n: fin N) :
   Wₙ k m * Wₙ k n  = Wₙ k (m + n) := begin
-  sorry,
+sorry,
 end
 
 

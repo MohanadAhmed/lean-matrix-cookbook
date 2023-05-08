@@ -4,6 +4,7 @@ import linear_algebra.matrix.symmetric
 import linear_algebra.matrix.nonsingular_inverse
 import linear_algebra.matrix.adjugate
 import linear_algebra.vandermonde
+import linear_algebra.matrix.circulant
 import data.complex.exponential
 import analysis.special_functions.trigonometric.basic
 import data.matrix.basic
@@ -186,7 +187,7 @@ of $ λ k n, iWkn k n
 
 -- eq_404
 noncomputable def dft {N: ℕ} (x: (fin N) → ℂ) : (fin N → ℂ) := 
-λ (k: fin N), ∑ (n : fin N), (Wkn k n) * (x n)
+λ (k: fin N), ∑ (n : fin N), (W_N k n) * (x n)
 
 -- eq_405
 noncomputable def idft {N: ℕ} (X: (fin N) → ℂ) : (fin N → ℂ) := 
@@ -204,6 +205,39 @@ lemma twiddle_comm {N: ℕ}(k n: fin N) :
   Wkn k n = Wkn n k := begin
   rw Wkn,rw Wkn, ring_nf,
 end
+
+lemma twiddle_comm' {N: ℕ}(k n: fin N) :
+  W_N k n = W_N n k := begin
+  rw W_N, dsimp, rw twiddle_comm,
+end
+
+lemma twiddle_sum {N: ℕ}(k m n: fin N) :
+  W_N k m * W_N k n  = W_N k (m + n) := begin
+  rw W_N, dsimp, 
+  repeat {rw Wkn},
+
+  rw ← exp_add, rw exp_eq_exp_iff_exists_int,
+  use (0), 
+  
+  rw ← add_div, rw ← mul_add (2 * ↑π * I * ↑k),
+  set α := (2 * ↑π * I),
+  rw mul_comm _ α, 
+  rw mul_assoc, rw mul_div_assoc,
+  rw mul_assoc α _ _, rw mul_div_assoc α,
+  rw ←  mul_add α,
+  -- rw ←  mul_add α,
+  -- rw mul_comm (↑0) (2 * ↑π * I),
+  -- rw @zero_mul ℂ _ (2 * ↑π * I),
+  rw mul_right_inj' two_pi_I_ne_zero,
+  norm_cast, rw add_zero,
+  rw div_left_inj',
+  simp only [coe_coe, mul_eq_mul_left_iff, nat.cast_eq_zero],
+  left, norm_cast, rw fin.coe_add,
+  
+  -- have ↑N ≠ 0,
+  -- rw fin.coe_add,
+end
+
 
 lemma twiddle_conj {N: ℕ}(k n: fin N) :
   iWkn k n = star (Wkn k n) := 
@@ -399,7 +433,91 @@ begin
   unfold star,
 end
 
-noncomputable def W11 {N : ℕ} : ℂ := complex.exp(-complex.I * 2 * π / N)
+lemma two_pi_I_by_N_piInt_pos {N : ℕ}
+  (h2 : 2 < N) :
+  (2 * ↑π * I / ↑N).im < π :=
+begin
+  have hNlt0 : 0 < (N:ℝ), by {
+    simp only [nat.cast_pos],
+    linarith,
+  },
+  have : (2) * ↑π * I / ↑N = (((2) * ↑π / ↑N)) * I, by {ring,},
+  rw this, rw mul_I_im,
+
+  have : ((2 * ↑π) / ↑N:ℂ).re = ((2 * π) / ↑N) , 
+  by {norm_cast,}, rw this,
+
+  rw div_lt_iff hNlt0, rw mul_comm, 
+  rw mul_lt_mul_left real.pi_pos,
+  norm_cast, exact h2,
+end
+
+lemma two_pi_I_by_N_piInt_neg {N : ℕ}
+  (h2 : 2 < N) :
+  -π < ((2) * ↑π * I / ↑N).im :=
+begin
+  have : (2) * ↑π * I / ↑N = (((2) * ↑π / ↑N)) * I, by {ring,},
+  rw this, rw mul_I_im,
+
+  have : ((2 * ↑π) / ↑N:ℂ).re = ((2 * π) / ↑N) , 
+  by {norm_cast,}, rw this,
+  have neg_pi_lt_zero: -π < 0, {
+    exact neg_lt_zero.2 real.pi_pos,
+  },
+  set η : ℝ := ↑N,
+  have zero_lt_η: 0 < η,{
+    change η with ↑N,
+    simp only [nat.cast_pos],
+    linarith,
+  },
+  have pi_div_N_lt_zero: 0 < 2*π/η, {
+    exact div_pos real.two_pi_pos zero_lt_η,
+  },
+  rw lt_div_iff zero_lt_η, 
+  rw neg_mul, rw mul_comm, rw ← neg_mul, 
+  rw mul_lt_mul_right real.pi_pos,
+  rw neg_lt_iff_pos_add',
+  change η with ↑N,
+  exact add_pos zero_lt_η zero_lt_two,
+end
+
+
+lemma twiddle_neg_half_cycle_eq_neg' {N: ℕ} {hN: 2 ≤ N}:
+  exp(-2 * π * I / N)^((N:ℂ)/(2:ℂ)) = 
+  -1 :=
+begin
+  by_cases h2: (N = 2),
+  rw h2, ring_nf,
+  have: (1/(2:ℂ)*↑2) = 1, by {
+    simp only [one_div, nat.cast_bit0, 
+    algebra_map.coe_one,
+     inv_mul_cancel_of_invertible],
+  },
+  rw this, simp only [cpow_one], rw exp_neg,
+  rw mul_comm, rw exp_pi_mul_I,
+  norm_num,
+  rw le_iff_lt_or_eq at hN,
+  cases hN with hNlt2 hNeq2,
+  rw cpow_def_of_ne_zero,
+  rw log_exp,
+  rw div_mul,
+  set η:ℂ := ↑N,
+  have hη: η ≠ 0, 
+    by {simp only [nat.cast_ne_zero], linarith,},
+
+  rw div_div_cancel' hη, ring_nf,
+  rw mul_comm, rw exp_neg,
+  rw exp_pi_mul_I, norm_num,
+  rw neg_mul, rw neg_mul, rw neg_div, rw neg_im,
+  rw neg_lt_neg_iff,
+  exact two_pi_I_by_N_piInt_pos hNlt2,
+  
+  rw neg_mul, rw neg_mul, rw neg_div, rw neg_im,
+  rw neg_le,
+  exact (le_of_lt (two_pi_I_by_N_piInt_neg hNlt2)),
+  exact exp_ne_zero ((-2) * π * I / N),
+  exfalso, exact h2 hNeq2.symm,
+end
 
 lemma eq_411 {N: ℕ}{h2: 2 ≤ N} {m: ℤ} : 
   let Wₙ := complex.exp(-2 * π * I  / N) in
@@ -418,7 +536,83 @@ begin
   exact exp_ne_zero (- 2 * π * I / N),
 end
 
-lemma eq_412 : sorry := sorry
+lemma eq_412 {N: ℕ} {hN: ne_zero N} (t: (fin N) → ℂ) :
+  matrix.circulant t = (W_N)⁻¹ ⬝ (diagonal(dft t)) ⬝ W_N := 
+begin
+  apply_fun (matrix.mul W_N),
+  rw ← matrix.mul_assoc,
+  rw ← matrix.mul_assoc,
+  rw mul_nonsing_inv,
+
+  funext j k,
+  rw mul_mul_apply,
+  rw dot_product_mul_vec, simp only,
+  rw ← W_N_symmetric, rw matrix.mul_apply,
+  conv_lhs {
+    apply_congr, skip,
+    rw circulant_apply,
+  },
+  rw dot_product,
+  
+  conv_rhs {
+    apply_congr, skip,
+     
+    rw vec_mul_diagonal,
+    -- rw pi.smul_apply,
+    -- rw pi.smul_apply,
+    rw matrix.one_apply,
+    -- rw smul_mul_assoc,
+    -- rw smul_mul_assoc,
+    rw ite_mul,
+    rw ite_mul,
+    rw zero_mul,
+    rw zero_mul, rw one_mul,
+    rw mul_comm,
+  },
+  rw sum_ite,
+  simp only [sum_const_zero, add_zero],
+  rw filter_eq,
+  simp only [mem_univ, if_true, sum_singleton],
+  rw dft, dsimp,
+  rw twiddle_comm',
+  rw mul_sum,
+  conv_rhs {
+    apply_congr, skip,
+    rw ← mul_assoc,
+    rw twiddle_sum,
+  },
+  -- rw Wₙ,simp only, dsimp,
+  rw ← equiv.sum_comp (@shiftk_equiv N hN (-k)),
+  rw shiftk_equiv, dsimp,  
+  rw shiftk, simp only [neg_neg, add_sub_cancel],
+  conv_lhs {
+    apply_congr, skip, rw add_comm,
+  }, 
+
+  rw ne_zero_iff at hN, exact hN,
+  -- extract_goal,
+    rintros x a h,
+  replace hinj := congr_arg (iWₙ).mul h,
+  rw ← matrix.mul_assoc at hinj,
+  rw ← matrix.mul_assoc at hinj,
+  rw iW_N_mul_W_N at hinj,
+  rw matrix.smul_mul at hinj,
+  rw matrix.smul_mul at hinj,
+  rw matrix.one_mul at hinj,
+  rw matrix.one_mul at hinj,
+  
+  funext k n,
+  have hz := (matrix.ext_iff.2 hinj) k n,
+  repeat {rw pi.smul_apply at hz},
+  have hNz : (N:ℂ) ≠ 0, {
+    rw nat.cast_ne_zero, exact ne_zero_iff.1 hN,
+  },
+  rw ← sub_eq_zero at hz,
+  rw ← smul_sub at hz,
+  rw smul_eq_zero_iff_eq' hNz at hz,
+  rwa sub_eq_zero at hz,
+  exact hN,
+end
 
 end dft_matrices
 
