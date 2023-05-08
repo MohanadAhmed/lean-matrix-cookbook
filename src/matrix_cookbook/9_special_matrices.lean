@@ -211,13 +211,20 @@ lemma twiddle_comm' {N: ℕ}(k n: fin N) :
   rw W_N, dsimp, rw twiddle_comm,
 end
 
-lemma twiddle_sum {N: ℕ}(k m n: fin N) :
-  W_N k m * W_N k n  = W_N k (m + n) := begin
+lemma twiddle_sum {N: ℕ}{hN: ne_zero N}(k m n: fin N) :
+  W_N k m * W_N k n  = W_N k (m + n) := 
+begin
   rw W_N, dsimp, 
   repeat {rw Wkn},
+  have hNz: (↑N:ℂ) ≠ 0, {
+    rw nat.cast_ne_zero, rwa ne_zero_iff at hN, 
+  },
 
-  rw ← exp_add, rw exp_eq_exp_iff_exists_int,
-  use (0), 
+  rw ← exp_add, 
+  rw exp_eq_exp_iff_exists_int,
+  let a:ℤ := ((↑m + ↑n)/N),
+  let w:ℤ := k*a,
+  use w, 
   
   rw ← add_div, rw ← mul_add (2 * ↑π * I * ↑k),
   set α := (2 * ↑π * I),
@@ -225,17 +232,25 @@ lemma twiddle_sum {N: ℕ}(k m n: fin N) :
   rw mul_assoc, rw mul_div_assoc,
   rw mul_assoc α _ _, rw mul_div_assoc α,
   rw ←  mul_add α,
-  -- rw ←  mul_add α,
-  -- rw mul_comm (↑0) (2 * ↑π * I),
-  -- rw @zero_mul ℂ _ (2 * ↑π * I),
   rw mul_right_inj' two_pi_I_ne_zero,
-  norm_cast, rw add_zero,
-  rw div_left_inj',
-  simp only [coe_coe, mul_eq_mul_left_iff, nat.cast_eq_zero],
-  left, norm_cast, rw fin.coe_add,
-  
-  -- have ↑N ≠ 0,
-  -- rw fin.coe_add,
+  rw div_eq_iff hNz, rw add_mul, 
+  rw div_mul_cancel _ hNz ,
+  change w with k*a,
+  rw int.cast_mul, simp only [coe_coe, int.cast_coe_nat],
+  rw ← coe_coe,
+  rw mul_assoc,
+  rw ← mul_add (↑k:ℂ),
+  by_cases hk: (↑k:ℂ) ≠ 0, {
+    -- rw mul_eq_mul_left_iff, left,
+    rw mul_right_inj' hk,
+    norm_cast, rw fin.coe_add,
+    change a with ((↑m + ↑n)/N),
+    simp only [coe_coe, int.cast_coe_nat], norm_cast,
+    rw nat.mod_add_div' (↑m + ↑n) N,
+  }, {
+    simp only [not_not] at hk,
+    rw hk, rw zero_mul, rw zero_mul,
+  },
 end
 
 
