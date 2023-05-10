@@ -196,18 +196,28 @@ begin
   have hNz: (↑N:ℂ) ≠ 0, {
     rw nat.cast_ne_zero, rwa ne_zero_iff at hN, 
   },
+  rw neg_mul,
+  rw neg_mul,
+  rw neg_mul,
+  rw neg_mul,
+  rw neg_mul,
+  rw neg_mul,
+  rw neg_div,
+  rw neg_div,
+  rw neg_div,
+  rw exp_neg,
+  rw exp_neg,
+  rw exp_neg,
+  rw ← mul_inv, rw inv_eq_iff_eq_inv, rw inv_inv,
 
   rw ← exp_add, 
   rw exp_eq_exp_iff_exists_int,
   let a:ℤ := ((↑m + ↑n)/N),
   let w:ℤ := k*a,
-  use -w, 
-  repeat {rw neg_mul},
+  use w, 
+  
+  rw ← add_div, rw ← mul_add (2 * ↑π * I * ↑↑k),
   set α := (2 * ↑π * I),
-  
-
-  rw ← add_div, rw ← mul_add (2 * ↑π * I * ↑k),
-  
   rw mul_comm _ α, 
   rw mul_assoc, rw mul_div_assoc,
   rw mul_assoc α _ _, rw mul_div_assoc α,
@@ -426,6 +436,20 @@ begin
   exact exp_ne_zero (- 2 * π * I / N),
 end
 
+def shiftk {N: ℕ}{hN: ne_zero N} (k: fin N):(fin N → fin N) 
+def shiftk_equiv {N: ℕ} {hN: ne_zero N} (k: fin N) : (fin N) ≃ (fin N) :=
+{
+  to_fun := @shiftk N hN (-k),
+  inv_fun := @shiftk N hN (k),
+  left_inv := by {
+    -- intro x, rw shiftk, rw shiftk, dsimp, ring,
+    intro x, dsimp shiftk, 
+  },
+  right_inv := by {
+    intro x, rw shiftk, rw shiftk, dsimp, ring,
+  },
+}
+
 lemma eq_412 {N: ℕ} {hN: ne_zero N} (t: (fin N) → ℂ) :
   matrix.circulant t = (Wₙ)⁻¹ ⬝ (diagonal(dft t)) ⬝ Wₙ := 
 begin
@@ -469,8 +493,9 @@ begin
   conv_rhs {
     apply_congr, skip,
     rw ← mul_assoc,
-    rw twiddle_sum,
+    rw @twiddle_sum N hN j k x,
   },
+
   -- rw Wₙ,simp only, dsimp,
   rw ← equiv.sum_comp (@shiftk_equiv N hN (-k)),
   rw shiftk_equiv, dsimp,  
