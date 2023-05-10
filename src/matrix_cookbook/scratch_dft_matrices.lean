@@ -540,7 +540,7 @@ begin
     apply_congr, skip, rw add_comm,
   }, 
 
-  exact hN,
+  -- exact hN,
   assumption',
   -- extract_goal,
     rintros x a h,
@@ -552,7 +552,7 @@ begin
   -- rw matrix.smul_mul at hinj,
   rw matrix.one_mul at hinj,
   rw matrix.one_mul at hinj, exact hinj,
-    
+
   -- funext k n,
   -- have hz := (matrix.ext_iff.2 hinj) k n,
   -- repeat {rw pi.smul_apply at hz},
