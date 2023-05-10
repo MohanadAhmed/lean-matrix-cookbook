@@ -1,12 +1,12 @@
 import data.complex.basic
 import data.complex.exponential
-
+import data.fin.basic
 import data.matrix.basic
 import data.matrix.reflection
 
--- import analysis.fourier.add_circle
-
 import analysis.special_functions.trigonometric.basic
+import analysis.special_functions.pow
+import analysis.special_functions.complex.log
 
 import linear_algebra.matrix.hermitian
 import linear_algebra.matrix.symmetric
@@ -181,6 +181,40 @@ begin
   funext k n,
   rw transpose_apply, rw Wₙ,
   ring_nf,
+end
+
+lemma sWₙ_symmetric {N: ℕ} {hN: ne_zero N} :
+  (sWₙ: matrix (fin N) (fin N) ℂ)ᵀ = sWₙ :=
+begin
+  funext k n,
+  rw transpose_apply, rw sWₙ,
+  ring_nf,
+end
+
+lemma iWₙ_mul_Wₙ_eq_one {N: ℕ} {hN: ne_zero N}: 
+  iWₙ⬝(Wₙ: matrix (fin N) (fin N) ℂ) = 1 :=
+begin
+  have hNz: (N:ℂ) ≠ 0, 
+    {rw nat.cast_ne_zero, exact (ne_zero_iff.1 hN), },
+
+  rw iWₙ, rw matrix.smul_mul, rw one_div, rw inv_smul_eq_iff₀,
+  apply_fun (transpose), 
+  rw transpose_mul, rw Wₙ_symmetric,
+  rw sWₙ_symmetric, rw transpose_smul, rw transpose_one,
+  apply Wₙ_mul_sWₙ,
+  assumption', 
+  rintros x y hxy,funext k n,
+  rw ← matrix.ext_iff at hxy,
+  specialize hxy n k, 
+  rw transpose_apply at hxy,
+  rw transpose_apply at hxy, exact hxy,
+end
+
+lemma inv_Wₙ {N: ℕ} {hN: ne_zero N} :
+  (Wₙ: matrix (fin N) (fin N) ℂ)⁻¹ = iWₙ := 
+begin
+  rw inverse_Wₙ,
+  rw iWₙ, rw sWₙ, exact hN,
 end
 
 lemma twiddle_comm' {N: ℕ}(k n: fin N) :
@@ -437,13 +471,14 @@ begin
 end
 
 def shiftk {N: ℕ}{hN: ne_zero N} (k: fin N):(fin N → fin N) 
+  := λ n: (fin N), (n + k)
+
 def shiftk_equiv {N: ℕ} {hN: ne_zero N} (k: fin N) : (fin N) ≃ (fin N) :=
 {
   to_fun := @shiftk N hN (-k),
   inv_fun := @shiftk N hN (k),
   left_inv := by {
-    -- intro x, rw shiftk, rw shiftk, dsimp, ring,
-    intro x, dsimp shiftk, 
+    intro x, rw shiftk, rw shiftk, dsimp, ring,
   },
   right_inv := by {
     intro x, rw shiftk, rw shiftk, dsimp, ring,
@@ -451,15 +486,16 @@ def shiftk_equiv {N: ℕ} {hN: ne_zero N} (k: fin N) : (fin N) ≃ (fin N) :=
 }
 
 lemma eq_412 {N: ℕ} {hN: ne_zero N} (t: (fin N) → ℂ) :
-  matrix.circulant t = (Wₙ)⁻¹ ⬝ (diagonal(dft t)) ⬝ Wₙ := 
+  matrix.circulant t = (Wₙ⁻¹) ⬝ (diagonal(dft t)) ⬝ Wₙ := 
 begin
   apply_fun (matrix.mul Wₙ),
   rw ← matrix.mul_assoc,
   rw ← matrix.mul_assoc,
-  rw mul_nonsing_inv,
+  rw inv_Wₙ, rw Wₙ_mul_iWₙ_eq_one,
+  -- rw matrix.one_mul,
 
   funext j k,
-  rw mul_mul_apply,
+  rw matrix.mul_mul_apply,
   rw dot_product_mul_vec, simp only,
   rw Wₙ_symmetric, rw matrix.mul_apply,
   conv_lhs {
@@ -504,27 +540,28 @@ begin
     apply_congr, skip, rw add_comm,
   }, 
 
-  rw ne_zero_iff at hN, exact hN,
+  exact hN,
+  assumption',
   -- extract_goal,
     rintros x a h,
   replace hinj := congr_arg (iWₙ).mul h,
   rw ← matrix.mul_assoc at hinj,
   rw ← matrix.mul_assoc at hinj,
-  rw iW_N_mul_W_N at hinj,
-  rw matrix.smul_mul at hinj,
-  rw matrix.smul_mul at hinj,
+  rw iWₙ_mul_Wₙ_eq_one at hinj,
+  -- rw matrix.smul_mul at hinj,
+  -- rw matrix.smul_mul at hinj,
   rw matrix.one_mul at hinj,
-  rw matrix.one_mul at hinj,
-  
-  funext k n,
-  have hz := (matrix.ext_iff.2 hinj) k n,
-  repeat {rw pi.smul_apply at hz},
-  have hNz : (N:ℂ) ≠ 0, {
-    rw nat.cast_ne_zero, exact ne_zero_iff.1 hN,
-  },
-  rw ← sub_eq_zero at hz,
-  rw ← smul_sub at hz,
-  rw smul_eq_zero_iff_eq' hNz at hz,
-  rwa sub_eq_zero at hz,
+  rw matrix.one_mul at hinj, exact hinj,
+    
+  -- funext k n,
+  -- have hz := (matrix.ext_iff.2 hinj) k n,
+  -- repeat {rw pi.smul_apply at hz},
+  -- have hNz : (N:ℂ) ≠ 0, {
+  --   rw nat.cast_ne_zero, exact ne_zero_iff.1 hN,
+  -- },
+  -- rw ← sub_eq_zero at hz,
+  -- rw ← smul_sub at hz,
+  -- rw smul_eq_zero_iff_eq' hNz at hz,
+  -- rwa sub_eq_zero at hz,
   exact hN,
 end
