@@ -5,6 +5,7 @@ import linear_algebra.matrix.nonsingular_inverse
 import linear_algebra.matrix.adjugate
 import linear_algebra.vandermonde
 import linear_algebra.matrix.circulant
+import linear_algebra.matrix.schur_complement
 import data.complex.exponential
 import analysis.special_functions.trigonometric.basic
 import data.matrix.basic
