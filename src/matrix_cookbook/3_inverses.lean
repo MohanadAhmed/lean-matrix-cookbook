@@ -52,8 +52,15 @@ lemma eq_155 (A B : matrix m m ℂ) : (A * B)⁻¹ = B⁻¹ * A⁻¹ := mul_inv_
 
 /-! ### The Woodbury identity -/
 
-lemma eq_156 : sorry := sorry
-lemma eq_157 : sorry := sorry
+-- lemma eq_156 (A : matrix m m ℂ) (B : matrix n n ℂ) (C : matrix m n ℂ): 
+--   sorry := sorry
+-- lemma eq_157 
+--   (A : matrix m m ℂ) (B : matrix n n ℂ) (U : matrix m n ℂ) (V : matrix m n ℂ):
+--   (A + U*B*V)⁻¹ = A⁻¹ - A⁻¹*U*(B⁻¹+V*A⁻¹*U)⁻¹*V * A⁻¹ := 
+-- begin
+  
+-- end
+
 lemma eq_158 : sorry := sorry
 
 /-! ### The Kailath Variant -/
