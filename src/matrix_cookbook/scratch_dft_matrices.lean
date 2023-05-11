@@ -353,8 +353,7 @@ begin
 end
 
 lemma eq_409 {N: ℕ} {hN: N ≠ 0} : 
-(Wₙ: matrix (fin N) (fin N) ℂ) ⬝ (sWₙ) = 
-  (N:ℂ)•(1) := 
+(Wₙ: matrix (fin N) (fin N) ℂ) ⬝ (sWₙ) =  (N:ℂ)•(1) := 
 begin
   apply Wₙ_mul_sWₙ,
   exact ne_zero_iff.2 hN,
@@ -564,4 +563,48 @@ begin
   -- rw smul_eq_zero_iff_eq' hNz at hz,
   -- rwa sub_eq_zero at hz,
   exact hN,
+end
+
+lemma dft_idft {N: ℕ} {hN: ne_zero N} (x: (fin N) → ℂ):
+  idft(dft(x)) = x := 
+begin
+  rw eq_406, rw eq_407,
+  rw mul_vec_mul_vec,
+  rw inv_Wₙ,rw iWₙ_mul_Wₙ_eq_one,
+  rw one_mul_vec,
+  assumption',
+end
+
+lemma idft_dft {N: ℕ} {hN: ne_zero N} (X: (fin N) → ℂ):
+  dft(idft(X)) = X := 
+begin
+  rw eq_406, rw eq_407,
+  rw mul_vec_mul_vec,
+  rw inv_Wₙ, rw Wₙ_mul_iWₙ_eq_one,
+  rw one_mul_vec,
+  assumption',
+end
+
+lemma notice_between_411_412 {N: ℕ} 
+  {hN: ne_zero N}:
+  let Wrow : (fin N) → ℂ  := λ(k: fin N), exp(-2*π*I*k/N) in
+  (Wₙ: matrix (fin N) (fin N) ℂ) = 
+    vandermonde (Wrow) := 
+begin
+  dsimp,
+  unfold vandermonde,
+  funext k n,
+  rw Wₙ, simp only,
+  
+  repeat {rw neg_mul,}, rw neg_div, rw neg_div,
+  rw exp_neg, rw ← exp_nat_mul, rw mul_neg,
+  rw exp_neg, 
+  
+  rw inv_eq_iff_eq_inv, rw inv_inv,
+  
+  rw exp_eq_exp_iff_exists_int,
+  use 0,
+  set η := 2*↑π*I, 
+  simp only [coe_coe, algebra_map.coe_zero, 
+    zero_mul, add_zero], ring,
 end
