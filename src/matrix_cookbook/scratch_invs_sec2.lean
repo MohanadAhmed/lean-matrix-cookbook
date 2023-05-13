@@ -46,10 +46,18 @@ begin
   assumption',
 end
 
+noncomputable lemma invertible_of_pos_def {A : matrix m m ℂ} {hA: matrix.pos_def A}:
+  invertible A := begin
+  cases hA with hAH hA_pos,
+  unfold is_hermitian at *,
+  
+-- apply invertible_of_is_unit_det,
+end
+
 lemma is_unit_if_pos_def {A : matrix m m ℂ} {hA: matrix.pos_def A}: 
   is_unit A.det := 
 begin
-  sorry,
+  apply is_unit_det_of_invertible,
 end
 
 lemma rank_up_pos_def_is_pos_def 
@@ -58,12 +66,46 @@ lemma rank_up_pos_def_is_pos_def
   {hP: matrix.pos_def P} {hR: matrix.pos_def R} :
   matrix.pos_def (B⬝P⬝Bᴴ + R) := 
 begin
-  split, rotate,
+  cases hP with hPH hP_pos,
+  cases hR with hRH hR_pos,
+
+  split,
+  -- (B ⬝ P ⬝ Bᴴ + R).is_hermitian
+  unfold is_hermitian at *, rw conj_transpose_add,
+  rw conj_transpose_mul,
+  rw conj_transpose_mul, rw conj_transpose_conj_transpose,
+  rw [hPH, hRH], rw ← matrix.mul_assoc,
+
   rintros x hx, simp only [is_R_or_C.re_to_complex],
+  -- 0 < ⇑is_R_or_C.re (star x ⬝ᵥ (B ⬝ P ⬝ Bᴴ + R).mul_vec x)
   rw add_mul_vec,
   rw ← mul_vec_mul_vec,
   rw dot_product_add,
   rw complex.add_re,
+  replace hR_pos := hR_pos x hx, 
+  rw is_R_or_C.re_to_complex at hR_pos,
+
+  replace hP_pos := hP_pos (Bᴴ.mul_vec x), 
+  rw is_R_or_C.re_to_complex at hP_pos,
+
+  rw dot_product_mul_vec,
+  nth_rewrite 0  ← transpose_transpose B,
+  rw ← vec_mul_mul_vec Bᵀ P (star x),
+  have : star(Bᴴ.mul_vec x) = Bᵀ.mul_vec (star x), {
+    rw star_mul_vec, rw conj_transpose_conj_transpose,
+    funext k, rw mul_vec, rw vec_mul, dsimp, rw dot_product,
+    rw dot_product, conv_rhs {
+      apply_congr, skip, rw transpose_apply, rw mul_comm,
+    },
+  }, rw ← this, rw ← dot_product_mul_vec,
+  
+  by_cases hBHx: (Bᴴ.mul_vec x = 0 ), {
+    rw hBHx, rw mul_vec_zero, rw dot_product_zero,
+    simp only [complex.zero_re, zero_add],
+    exact hR_pos,
+  }, {
+    exact add_pos (hP_pos hBHx) hR_pos,
+  },
 end
 
 lemma eq_158 (P : matrix m m ℂ) (R : matrix n n ℂ) (B : matrix n m ℂ)
@@ -96,6 +138,7 @@ begin
 
   -- nth_rewrite 0 ← matrix.mul_one (Bᵀ ⬝ (R + B ⬝ P ⬝ Bᵀ)⁻¹),
   rw ←  matrix.mul_add (Bᵀ ⬝ (R + B ⬝ P ⬝ Bᵀ)⁻¹), rw nonsing_inv_mul_cancel_right,
+
 end
 -- Checks
 
