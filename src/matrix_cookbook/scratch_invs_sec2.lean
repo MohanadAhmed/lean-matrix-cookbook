@@ -1,5 +1,6 @@
 import linear_algebra.matrix.nonsingular_inverse
 import linear_algebra.matrix.pos_def
+import linear_algebra.matrix.spectrum
 import data.complex.basic
 
 variables {m n p : Type*}
@@ -46,24 +47,46 @@ begin
   assumption',
 end
 
-noncomputable lemma invertible_of_pos_def {A : matrix m m ℂ} {hA: matrix.pos_def A}:
-  invertible A := begin
-  cases hA with hAH hA_pos,
-  unfold is_hermitian at *,
-  
--- apply invertible_of_is_unit_det,
+lemma eq_156_hermitianized (A : matrix m m ℂ) (B : matrix n n ℂ) (C : matrix m n ℂ)
+  {hA: is_unit A.det} {hB: is_unit B.det} {hQ: is_unit (B⁻¹ + Cᴴ ⬝ A⁻¹ ⬝ C).det}: 
+  (A + C⬝B⬝Cᴴ)⁻¹ = A⁻¹ - A⁻¹⬝C⬝(B⁻¹+Cᴴ⬝A⁻¹⬝C)⁻¹⬝Cᴴ ⬝ A⁻¹ :=  
+begin
+  apply eq_157,
+  assumption',
 end
 
-lemma is_unit_if_pos_def {A : matrix m m ℂ} {hA: matrix.pos_def A}: 
+lemma is_unit_of_pos_def {A : matrix m m ℂ} (hA: matrix.pos_def A): 
   is_unit A.det := 
 begin
-  apply is_unit_det_of_invertible,
+  rw is_unit_iff_ne_zero,
+  apply ne.symm,
+  cases hA with hAH hpos,
+  rw is_hermitian.det_eq_prod_eigenvalues hAH,
+  norm_cast,
+  rw ← ne.def,
+  apply ne_of_lt,
+  apply finset.prod_pos,
+  intros i _,
+  rw hAH.eigenvalues_eq,
+  apply hpos _ (λ h, _),
+  have h_det : (hAH.eigenvector_matrix)ᵀ.det = 0,
+    from matrix.det_eq_zero_of_row_eq_zero i (λ j, congr_fun h j),
+  simpa only [h_det, not_is_unit_zero] using
+    is_unit_det_of_invertible hAH.eigenvector_matrixᵀ,
 end
 
-lemma rank_up_pos_def_is_pos_def 
+noncomputable lemma invertible_of_pos_def {A : matrix m m ℂ} {hA: matrix.pos_def A}:
+  invertible A := 
+begin  
+  apply invertible_of_is_unit_det,
+  apply is_unit_of_pos_def,
+  exact hA,
+end
+
+lemma A_add_B_P_Bt_pos_if_A_pos_B_pos 
   (P : matrix m m ℂ) (R : matrix n n ℂ) (B : matrix n m ℂ)
-  [invertible P] [invertible R]
-  {hP: matrix.pos_def P} {hR: matrix.pos_def R} :
+  -- [invertible P] [invertible R]
+  (hP: matrix.pos_def P) (hR: matrix.pos_def R) :
   matrix.pos_def (B⬝P⬝Bᴴ + R) := 
 begin
   cases hP with hPH hP_pos,
@@ -108,37 +131,74 @@ begin
   },
 end
 
-lemma eq_158 (P : matrix m m ℂ) (R : matrix n n ℂ) (B : matrix n m ℂ)
+lemma right_mul_inj_of_invertible (P : matrix m m ℂ) [invertible P] :
+  function.injective (λ (x : matrix n m ℂ), x ⬝ P) := 
+begin
+  rintros x a hax, 
+  replace hax := congr_arg (λ (x : matrix n m ℂ), x ⬝ P⁻¹) hax,
+  dsimp at hax, 
+  rw mul_nonsing_inv_cancel_right at hax,
+  rw mul_nonsing_inv_cancel_right at hax, exact hax,
+  apply is_unit_det_of_invertible,
+  apply is_unit_det_of_invertible,
+end
+
+lemma left_mul_inj_of_invertible (P : matrix m m ℂ) [invertible P] :
+  function.injective (λ (x : matrix m n ℂ), P ⬝ x) := 
+begin
+  rintros x a hax, 
+  replace hax := congr_arg (λ (x : matrix m n ℂ), P⁻¹ ⬝ x) hax,
+  dsimp at hax, 
+  rw nonsing_inv_mul_cancel_left at hax,
+  rw nonsing_inv_mul_cancel_left at hax,
+  exact hax,
+  apply is_unit_det_of_invertible,
+  apply is_unit_det_of_invertible,
+end
+
+lemma eq_158_hermitianized (P : matrix m m ℂ) (R : matrix n n ℂ) (B : matrix n m ℂ)
   [invertible P] [invertible R]
   {hP: matrix.pos_def P} {hR: matrix.pos_def R} : 
-  (P⁻¹ + Bᵀ⬝R⁻¹⬝B)⁻¹⬝Bᵀ⬝R⁻¹ = P⬝Bᵀ⬝(B⬝P⬝Bᵀ + R)⁻¹ := 
+  (P⁻¹ + Bᴴ⬝R⁻¹⬝B)⁻¹⬝Bᴴ⬝R⁻¹ = P⬝Bᴴ⬝(B⬝P⬝Bᴴ + R)⁻¹ := 
 begin
   -- This is equation 80:
   -- http://www.stat.columbia.edu/~liam/teaching/neurostat-spr12/papers/hmm/KF-welling-notes.pdf
 
+  -- have hP_inv: invertible P,  {apply invertible_of_pos_def, exact hP,},
+  -- have hR_inv: invertible R,  {apply invertible_of_pos_def, exact hR,},
+
+  have hP_unit: is_unit P.det, by exact is_unit_of_pos_def hP,
+  have hR_unit: is_unit R.det, by exact is_unit_of_pos_def hR,
+  have hP_inv_unit := is_unit_nonsing_inv_det P hP_unit,
+  have hR_inv_unit := is_unit_nonsing_inv_det R hR_unit,
+  have hComb_unit: is_unit (R + B ⬝ P ⬝ Bᴴ).det, {
+    rw add_comm, apply is_unit_of_pos_def, apply A_add_B_P_Bt_pos_if_A_pos_B_pos,  
+    assumption',
+  },
+  have : is_unit (R⁻¹⁻¹ + Bᴴᴴ ⬝ P⁻¹⁻¹ ⬝ Bᴴ).det, {
+    simp only [inv_inv_of_invertible, conj_transpose_conj_transpose],
+    apply hComb_unit,
+  },
+
   rw add_comm _ R,
-  -- rw eq_156 R P B,  --set α := P⁻¹ + Bᵀ ⬝ R⁻¹ ⬝ B,
-  nth_rewrite 1 ← transpose_transpose B,
-  rw eq_156 P⁻¹ R⁻¹ Bᵀ,  --set α := P⁻¹ + Bᵀ ⬝ R⁻¹ ⬝ B,
-  -- have invP: invertible P, by sorry,
-  -- have invR: invertible R, by sorry,
-  simp only [inv_inv_of_invertible, transpose_transpose],
-  apply_fun (matrix.mul P⁻¹), rw ←  matrix.mul_assoc P⁻¹ _ _,
-  repeat {rw ← matrix.mul_assoc},  
-  repeat {rw matrix.mul_sub},
-  repeat {rw ← matrix.mul_assoc},
-  rw nonsing_inv_mul, repeat {rw matrix.one_mul}, repeat {rw matrix.mul_sub},
-  repeat {rw matrix.sub_mul}, repeat {rw matrix.one_mul},
+  nth_rewrite 1 ← conj_transpose_conj_transpose B,
+  rw eq_156_hermitianized P⁻¹ R⁻¹ Bᴴ,
+  simp only [inv_inv_of_invertible, conj_transpose_conj_transpose],
+  rw matrix.sub_mul, rw matrix.sub_mul, 
   rw sub_eq_iff_eq_add,
-  apply_fun (λ a, a⬝R), dsimp,
+  apply_fun (matrix.mul P⁻¹), rw matrix.mul_add,
+  repeat {rw ←  matrix.mul_assoc P⁻¹ _ _}, rw nonsing_inv_mul, rw matrix.one_mul,
+  apply_fun (λ x, x⬝R),  dsimp,
   rw matrix.add_mul,
-  repeat {rw nonsing_inv_mul_cancel_right},
-  rw matrix.mul_assoc (Bᵀ ⬝ (R + B ⬝ P ⬝ Bᵀ)⁻¹),
-  rw matrix.mul_assoc (Bᵀ ⬝ (R + B ⬝ P ⬝ Bᵀ)⁻¹),
+  rw nonsing_inv_mul_cancel_right,
+  rw nonsing_inv_mul_cancel_right,
+  repeat {rw matrix.mul_assoc (Bᴴ⬝(R + B ⬝ P ⬝ Bᴴ)⁻¹)},
+  rw ← matrix.mul_add (Bᴴ⬝(R + B ⬝ P ⬝ Bᴴ)⁻¹), rw nonsing_inv_mul_cancel_right,
 
-  -- nth_rewrite 0 ← matrix.mul_one (Bᵀ ⬝ (R + B ⬝ P ⬝ Bᵀ)⁻¹),
-  rw ←  matrix.mul_add (Bᵀ ⬝ (R + B ⬝ P ⬝ Bᵀ)⁻¹), rw nonsing_inv_mul_cancel_right,
-
+  rw add_comm, apply is_unit_of_pos_def, apply A_add_B_P_Bt_pos_if_A_pos_B_pos,
+  assumption',
+  apply right_mul_inj_of_invertible,
+  apply left_mul_inj_of_invertible,
 end
 -- Checks
 
