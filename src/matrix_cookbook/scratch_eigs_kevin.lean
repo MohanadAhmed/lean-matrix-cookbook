@@ -69,6 +69,18 @@ begin
   },
 end
 
+lemma is_root_minpoly_iff_is_root_charpoly (A: matrix n n ℂ) (μ: ℂ) :
+  is_root (matrix.charpoly A) μ ↔ is_root (minpoly ℂ A) μ :=
+begin
+  split,
+  intro h,
+  let mp := minpoly ℂ A,
+
+  sorry,
+  intro h,
+  apply is_root.dvd h,
+  exact matrix.minpoly_dvd_charpoly A,
+end
 
 lemma eig_if_eigenvalue (A: matrix n n ℂ) (μ: ℂ) :
   μ ∈ eigs A →  module.End.has_eigenvalue (matrix.to_lin' A) μ := 
@@ -118,19 +130,3 @@ end
 -- begin
 
 -- end
-
-lemma is_root_minpoly_iff_is_root_charpoly (A: matrix n n ℂ) (μ: ℂ) :
-  is_root (matrix.charpoly A) μ ↔ is_root (minpoly ℂ A) μ :=
-begin
-  split,
-  intro h,
-  -- apply dvd_iff_is_root.1,
-  
-  -- rw polynomial.eq_prod_roots_of_splits,
-
-  sorry,
-  intro h,
-  apply is_root.dvd h,
-  exact matrix.minpoly_dvd_charpoly A,
-end
-

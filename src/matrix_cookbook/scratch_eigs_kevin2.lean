@@ -3,6 +3,7 @@ import linear_algebra.eigenspace
 import linear_algebra.charpoly.basic
 import linear_algebra.matrix.charpoly.coeff
 import linear_algebra.charpoly.to_matrix
+import linear_algebra.matrix.charpoly.minpoly
 import data.complex.basic
 import analysis.complex.polynomial
 
@@ -72,4 +73,17 @@ begin
     rw polynomial.roots_one,
     simp only [multiset.empty_eq_zero, multiset.sum_zero],
   },
+end
+
+lemma is_root_minpoly_iff_is_root_charpoly (A: matrix n n ℂ) (μ: ℂ) :
+  is_root (matrix.charpoly A) μ ↔ is_root (minpoly ℂ A) μ :=
+begin
+  split,
+  intro h,
+  set mp := minpoly ℂ A,
+  sorry,
+
+  intro h,
+  apply is_root.dvd h,
+  exact matrix.minpoly_dvd_charpoly A,
 end
