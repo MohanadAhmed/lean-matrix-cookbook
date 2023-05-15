@@ -2,6 +2,7 @@ import linear_algebra.matrix.spectrum
 import linear_algebra.eigenspace
 import linear_algebra.charpoly.basic
 import linear_algebra.matrix.charpoly.coeff
+import linear_algebra.matrix.charpoly.minpoly
 import linear_algebra.charpoly.to_matrix
 import data.complex.basic
 import analysis.complex.polynomial
@@ -123,7 +124,13 @@ lemma is_root_minpoly_iff_is_root_charpoly (A: matrix n n ℂ) (μ: ℂ) :
 begin
   split,
   intro h,
-  rw is_root.def at *,
-  sorry, sorry,
+  -- apply dvd_iff_is_root.1,
+  
+  -- rw polynomial.eq_prod_roots_of_splits,
+
+  sorry,
+  intro h,
+  apply is_root.dvd h,
+  exact matrix.minpoly_dvd_charpoly A,
 end
 
