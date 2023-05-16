@@ -200,6 +200,35 @@ begin
   apply right_mul_inj_of_invertible,
   apply left_mul_inj_of_invertible,
 end
+
+lemma eq_159 (A : matrix m m ℂ) (B : matrix m n ℂ) (C : matrix n m ℂ)
+  {hA: is_unit A.det} {h: is_unit (1 + C ⬝ A⁻¹ ⬝ B).det} :
+  (A + B⬝C)⁻¹ = A⁻¹ - A⁻¹⬝B⬝(1 + C⬝A⁻¹⬝B)⁻¹⬝C⬝A⁻¹ :=
+begin
+  nth_rewrite 0 ← matrix.mul_one B,
+  rw eq_157 A 1 B C,
+  simp only [inv_one], assumption',
+  simp only [det_one, is_unit_one],
+  rw inv_one, assumption',
+end
+
+.
+
+lemma eq_160 (A : matrix m m ℂ) {hA: is_unit A.det} (b c : m → ℂ) :
+  (A + col b ⬝ row c)⁻¹ = A⁻¹ - (1 + c ⬝ᵥ (A⁻¹.mul_vec b))⁻¹ • (A⁻¹⬝(col b ⬝ row c)⬝A⁻¹) :=
+begin
+  rw eq_159, simp only [sub_right_inj],
+  -- set α := (1 + row c ⬝ A⁻¹ ⬝ col b)⁻¹,
+  -- set β := (1 + c ⬝ᵥ A⁻¹.mul_vec b)⁻¹,
+  -- repeat {rw matrix.mul_assoc A⁻¹},
+  apply_fun (λ x, x⬝A),  dsimp, rw nonsing_inv_mul_cancel_right,
+  rw ← matrix.smul_mul, rw nonsing_inv_mul_cancel_right,
+  apply_fun (λ x, A⬝x),  dsimp, rw ← matrix.mul_smul,
+  repeat {rw matrix.mul_assoc A⁻¹},
+  rw mul_nonsing_inv_cancel_left,
+  rw mul_nonsing_inv_cancel_left,
+  assumption',
+end
 -- Checks
 
 section randomstuff
