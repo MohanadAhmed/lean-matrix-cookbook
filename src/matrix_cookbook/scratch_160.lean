@@ -92,12 +92,31 @@ begin
     algebra.id.smul_eq_mul], 
   rw col_apply, rw pi.add_apply, rw pi.add_apply,
   rw one_apply_eq, 
-  set α := row c ⬝ A,
+  -- set α := row c ⬝ A,
   
   rw mul_apply,
   simp only [col_apply], 
-  rw mul_apply,
+  rw mul_apply, conv_rhs {
+    congr, skip,
+    conv {
+      apply_congr, skip,
+      rw col_apply, rw row_apply,
+    },
+    rw fintype.univ_punit, rw finset.sum_singleton,
+  },
+  
+  conv_lhs {
+    rw mul_assoc, rw mul_comm _ (c k), rw ← mul_assoc,
+    congr,skip, congr, skip, apply_congr, skip,
+    rw matrix.mul, dsimp, rw dot_product,
+    dsimp, 
+  }, 
 
+  rw mul_comm, by_cases h: (b m * c k = 0), {
+    rw h, rw mul_zero,rw mul_zero,
+  },
+  rw ← ne.def at h,
+  rw mul_left_inj' h,
   -- conv_lhs {
   --   congr, congr, skip, congr, skip, 
   --   apply_congr, skip, rw mul_apply,  conv {
