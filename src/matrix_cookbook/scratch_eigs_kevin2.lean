@@ -16,8 +16,7 @@ open_locale matrix big_operators
 noncomputable def eigs (A: matrix n n R): multiset R := 
   polynomial.roots (matrix.charpoly A)
 
-lemma det_eq_prod_eigs (A: matrix n n R): 
-  A.det = (eigs A).prod :=
+lemma det_eq_prod_eigs (A: matrix n n R): A.det = (eigs A).prod :=
 begin
   rw eigs,
   by_cases hn: nonempty n, {
@@ -48,7 +47,7 @@ begin
   }
 end
 
-lemma trace_eq_sum_eigs (A: matrix n n R) : A.trace = (eigs A).sum := --sorry
+lemma trace_eq_sum_eigs (A: matrix n n R) : A.trace = (eigs A).sum :=
 begin
   rw eigs,
   by_cases hn: (nonempty n), {  
