@@ -137,6 +137,28 @@ begin
   apply has_eigenvalue_iff_is_root.1 h,
 end
 
+lemma eig_if_eigenvalue (A: matrix n n R)(μ: R) :
+  μ ∈ eigs A → has_eigenvalue (matrix.to_lin' A) μ := 
+begin
+  rw eigs, rw mem_roots',
+  intro h, cases h with hne hcp,
+  exact has_eigenvalue_of_root_charpoly _ _ hcp,
+end
+
+lemma eigenvalue_if_eig (A: matrix n n R)(μ: R) :
+  has_eigenvalue (matrix.to_lin' A) μ → μ ∈ eigs A  := 
+begin
+  rw eigs, rw mem_roots',
+  intro h, split, rotate,
+  exact root_charpoly_of_has_eigenvalue _ _ h,
+  have p_nz : matrix.charpoly A ≠ 0, { 
+    by_contra, replace h := congr_arg nat_degree h, simp only [nat_degree_zero] at h, 
+    have p_deg := matrix.charpoly_nat_degree_eq_dim A, rw p_deg at h,
+    have hn: fintype.card n ≠ 0, {exact fintype.card_ne_zero,},
+    exact hn h,
+  }, exact p_nz,
+end
+
 
 -- lemma is_root_minpoly_iff_is_root_charpoly (A: matrix n n ℂ) (μ: ℂ) :
 --   is_root (matrix.charpoly A) μ ↔ is_root (minpoly ℂ A) μ :=
