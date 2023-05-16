@@ -149,8 +149,8 @@ end
 lemma eigenvalue_if_eig [nonempty n](A: matrix n n R)(μ: R) :
   has_eigenvalue (matrix.to_lin' A) μ → μ ∈ eigs A  := 
 begin
-  rw eigs, rw mem_roots',
-  intro h, split, rotate,
+  rw eigs, rw mem_roots,
+  intro h,
   exact root_charpoly_of_has_eigenvalue _ _ h,
   have p_nz : matrix.charpoly A ≠ 0, { 
     by_contra, replace h := congr_arg nat_degree h, simp only [nat_degree_zero] at h, 
