@@ -15,7 +15,7 @@ open matrix polynomial
 open linear_map module.End  
 open_locale matrix big_operators
 
-lemma root_charpoly_of_eig (A: matrix n n R)(μ: R):
+lemma root_charpoly_of_has_eigenvalue (A: matrix n n R)(μ: R):
   has_eigenvalue (matrix.to_lin' A) μ → A.charpoly.is_root μ:=
 begin
   intro heig,
@@ -39,7 +39,7 @@ begin
   rw ← ya,
 end
 
-lemma eig_of_root_charpoly (A: matrix n n R)(μ: R):
+lemma has_eigenvalue_of_root_charpoly (A: matrix n n R)(μ: R):
    A.charpoly.is_root μ → has_eigenvalue (matrix.to_lin' A) μ :=
 begin
 
@@ -59,12 +59,12 @@ begin
   rw to_lin'_apply, split, assumption',
 end
 
-lemma root_charpoly_iff_eig (A: matrix n n R)(μ: R) :
+lemma root_charpoly_iff_has_eigenvalue (A: matrix n n R)(μ: R) :
    A.charpoly.is_root μ ↔ has_eigenvalue (matrix.to_lin' A) μ := 
 begin
   split,
-  apply eig_of_root_charpoly,
-  apply root_charpoly_of_eig,
+  apply has_eigenvalue_of_root_charpoly,
+  apply root_charpoly_of_has_eigenvalue,
 end
 
 lemma root_charpoly_iff_root_minpoly (A: matrix n n R)(μ: R) :
@@ -72,9 +72,9 @@ lemma root_charpoly_iff_root_minpoly (A: matrix n n R)(μ: R) :
 begin
   split,
 
-  intro h, rw root_charpoly_iff_eig, 
+  intro h, rw root_charpoly_iff_has_eigenvalue, 
   apply has_eigenvalue_iff_is_root.2 h,
   
-  rw root_charpoly_iff_eig, intro h,
+  rw root_charpoly_iff_has_eigenvalue, intro h,
   apply has_eigenvalue_iff_is_root.1 h,
 end
