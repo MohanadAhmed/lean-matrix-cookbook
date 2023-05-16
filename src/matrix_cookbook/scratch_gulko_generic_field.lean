@@ -5,23 +5,22 @@ import linear_algebra.matrix.charpoly.coeff
 import linear_algebra.charpoly.to_matrix
 import linear_algebra.matrix.charpoly.minpoly
 import linear_algebra.matrix.to_linear_equiv
-import data.complex.basic
 import ring_theory.polynomial_algebra
-import analysis.complex.polynomial
+import ring_theory.integral_closure
 
 variables {n: Type*}[fintype n][decidable_eq n][nonempty n]
-variables {R: Type*}[field R][is_alg_closed R]
+variables {R: Type*}[field R][is_alg_closed R][is_domain R]
 
 open matrix polynomial
 open linear_map module.End  
 open_locale matrix big_operators
 
-lemma root_charpoly_of_eig (A: matrix n n ℂ)(μ: ℂ):
+lemma root_charpoly_of_eig (A: matrix n n R)(μ: R):
   has_eigenvalue (matrix.to_lin' A) μ → A.charpoly.is_root μ:=
 begin
   intro heig,
   have va := has_eigenvalue.exists_has_eigenvector heig, 
-  have xa : (∃ (v : n → ℂ) (H : v ≠ 0), (μ • 1 - A).mul_vec v = 0), {
+  have xa : (∃ (v : n → R) (H : v ≠ 0), (μ • 1 - A).mul_vec v = 0), {
     cases va with v hv, use v, cases hv with hv hnz, split, exact hnz,
     rw mem_eigenspace_iff at hv, 
     rw to_lin'_apply at hv, 
@@ -40,7 +39,7 @@ begin
   rw ← ya,
 end
 
-lemma eig_of_root_charpoly (A: matrix n n ℂ)(μ: ℂ):
+lemma eig_of_root_charpoly (A: matrix n n R)(μ: R):
    A.charpoly.is_root μ → has_eigenvalue (matrix.to_lin' A) μ :=
 begin
 
@@ -60,7 +59,7 @@ begin
   rw to_lin'_apply, split, assumption',
 end
 
-lemma root_charpoly_iff_eig (A: matrix n n ℂ)(μ: ℂ) :
+lemma root_charpoly_iff_eig (A: matrix n n R)(μ: R) :
    A.charpoly.is_root μ ↔ has_eigenvalue (matrix.to_lin' A) μ := 
 begin
   split,
@@ -68,8 +67,8 @@ begin
   apply root_charpoly_of_eig,
 end
 
-lemma root_charpoly_iff_root_minpoly (A: matrix n n ℂ)(μ: ℂ) :
-  (minpoly ℂ (matrix.to_lin' A)).is_root μ ↔ A.charpoly.is_root μ := 
+lemma root_charpoly_iff_root_minpoly (A: matrix n n R)(μ: R) :
+  (minpoly R (matrix.to_lin' A)).is_root μ ↔ A.charpoly.is_root μ := 
 begin
   split,
 
@@ -78,26 +77,4 @@ begin
   
   rw root_charpoly_iff_eig, intro h,
   apply has_eigenvalue_iff_is_root.1 h,
-end
-
-lemma root_minpoly_linear_map_iff_root_minpoly (A: matrix n n ℂ)(μ: ℂ) :
-  (minpoly ℂ (matrix.to_lin' A)).is_root μ ↔ (minpoly ℂ A).is_root μ :=
-begin
-  -- split,
-  -- rw ← has_eigenvalue_iff_is_root,
-  -- rw ← root_charpoly_iff_eig,
-  -- intro h,
-  sorry,
-end
-
-lemma minpoly_linear_map_eq_minpoly_matrix (A: matrix n n ℂ) :
-  minpoly ℂ (to_lin' A) = minpoly ℂ A  := 
-begin
-  -- -- unfold minpoly, dsimp,
-  -- -- change (matrix n n ℂ) with (n → (n → ℂ)),
-  -- rw to_lin', rw linear_map.to_matrix', dsimp,
-  -- unfold minpoly, dsimp,
-  -- apply minpoly.unique,
-  -- apply minpoly.monic,
-  sorry,
 end
