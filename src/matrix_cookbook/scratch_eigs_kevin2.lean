@@ -6,7 +6,7 @@ import linear_algebra.charpoly.to_matrix
 import linear_algebra.matrix.charpoly.minpoly
 import linear_algebra.matrix.to_linear_equiv
 
-variables {n: Type*}[fintype n][decidable_eq n][nonempty n]
+variables {n: Type*}[fintype n][decidable_eq n] --[nonempty n]
 variables {R: Type*}[field R][is_alg_closed R]
 
 open matrix polynomial
@@ -51,6 +51,7 @@ lemma trace_eq_sum_eigs (A: matrix n n R) : A.trace = (eigs A).sum :=
 begin
   rw eigs,
   by_cases hn: (nonempty n), {  
+    haveI hn1 := hn,
     apply_fun (has_neg.neg),
     rw ← polynomial.sum_roots_eq_next_coeff_of_monic_of_split ,
     rw trace_eq_neg_charpoly_coeff, rw next_coeff,
@@ -145,7 +146,7 @@ begin
   exact has_eigenvalue_of_root_charpoly _ _ hcp,
 end
 
-lemma eigenvalue_if_eig (A: matrix n n R)(μ: R) :
+lemma eigenvalue_if_eig [nonempty n](A: matrix n n R)(μ: R) :
   has_eigenvalue (matrix.to_lin' A) μ → μ ∈ eigs A  := 
 begin
   rw eigs, rw mem_roots',
