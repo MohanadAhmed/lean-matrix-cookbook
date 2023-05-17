@@ -15,18 +15,12 @@ variables {n: Type*}[fintype n][decidable_eq n] --[nonempty n]
 variables {R: Type*}[field R][is_alg_closed R]
 variables {Z: matrix n n R}
 variables {p: polynomial R}
-#check eval₂ (algebra_map R ((n → R) →ₗ[R] n → R)) Z.mul_vec_lin p
-#check (eval₂ (algebra_map R (matrix n n R)) Z p)
 
-lemma mat_minpoly_is_linmap_minpoly (A: matrix n n R) :
+lemma mat_minpoly_is_linmap_minpoly [nonempty n](A: matrix n n R) :
   minpoly R A = minpoly R (to_lin' A) :=
 begin
-  -- unfold minpoly, unfold to_lin', unfold to_matrix', dsimp, 
-  -- -- have : ∀(p: polynomial R), eval₂ (algebra_map R ((n → R) →ₗ[R] n → R)) A.mul_vec_lin p = 
-  -- --    eval₂ (algebra_map R (matrix n n R)) A p, {
-      
-  -- -- },
-  -- rw linear_map.to_matrix' (to_lin' A),
+  apply minpoly.eq_of_irreducible_of_monic  
+  -- apply minpoly.aeval,
 end
 
 /-
