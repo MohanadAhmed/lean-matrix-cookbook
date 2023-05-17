@@ -214,9 +214,65 @@ end
 
 .
 
-lemma eq_160 (A : matrix m m ℂ) {hA: is_unit A.det} (b c : m → ℂ) :
+lemma lemma_coercion_to_scalars
+(u: n → ℂ)(v: n → ℂ)(s: ℂ)(sm: matrix unit unit ℂ) (h: s = (sm punit.star punit.star)):
+  (col u ⬝ sm ⬝ row v)  = s • (col u ⬝ row v) :=
+begin
+  funext m k,
+  rw mul_apply, rw fintype.univ_punit, rw finset.sum_singleton, rw row_apply, 
+  rw mul_apply, rw fintype.univ_punit, rw finset.sum_singleton, rw col_apply,
+  rw ← h,
+  rw pi.smul_apply,
+  rw pi.smul_apply, simp only [algebra.id.smul_eq_mul], rw mul_apply, 
+  rw fintype.univ_punit, rw finset.sum_singleton, rw row_apply, rw col_apply, 
+  ring,
+end
+
+lemma row_mul_mat_mul_col (A : matrix m m ℂ) (b c : m → ℂ) :
+  c ⬝ᵥ A.mul_vec b = (row c ⬝ A ⬝ col b) punit.star punit.star:= 
+begin
+  rw mul_apply,
+  rw dot_product,
+  conv_rhs {
+    apply_congr, skip, rw col_apply, 
+    rw mul_apply, conv {
+      congr, apply_congr, skip, rw row_apply,
+    }, rw finset.sum_mul,
+  },
+  
+  conv_lhs {
+    apply_congr, skip, rw mul_vec, dsimp, rw dot_product,
+    rw finset.mul_sum, conv {
+      apply_congr, skip, rw ← mul_assoc,
+    } ,
+  } ,
+  apply finset.sum_comm,
+end
+
+lemma one_add_row_mul_mat_col_inv (A : matrix m m ℂ)
+  (b c : m → ℂ) (habc: (1 + c ⬝ᵥ A.mul_vec b) ≠ 0):
+  (1 + c ⬝ᵥ A.mul_vec b)⁻¹ =
+    (1 + row c ⬝ A ⬝ col b)⁻¹ punit.star punit.star :=
+begin
+  -- set β := (1 + row c ⬝ A⁻¹ ⬝ col b)⁻¹ punit.star punit.star,
+  set γ := 1 + c ⬝ᵥ A.mul_vec b, 
+  rw ← mul_left_inj' habc, rw inv_mul_cancel habc,
+  rw mul_comm, rw inv_def, rw adjugate,
+  simp only [
+    det_unique, punit.default_eq_star, pi.add_apply, 
+    one_apply_eq, ring.inverse_eq_inv', of_apply, pi.smul_apply,
+    cramer_subsingleton_apply, pi.single_eq_same, 
+    algebra.id.smul_eq_mul, mul_one
+  ],
+  rw ← row_mul_mat_mul_col, symmetry', apply mul_inv_cancel, exact habc,
+end
+
+lemma eq_160 (A : matrix m m ℂ) (b c : m → ℂ) 
+  [invertible A](habc: (1 + c ⬝ᵥ A⁻¹.mul_vec b) ≠ 0):
   (A + col b ⬝ row c)⁻¹ = A⁻¹ - (1 + c ⬝ᵥ (A⁻¹.mul_vec b))⁻¹ • (A⁻¹⬝(col b ⬝ row c)⬝A⁻¹) :=
 begin
+  let hA := is_unit_det_of_invertible A,
+
   rw eq_159, simp only [sub_right_inj],
   -- set α := (1 + row c ⬝ A⁻¹ ⬝ col b)⁻¹,
   -- set β := (1 + c ⬝ᵥ A⁻¹.mul_vec b)⁻¹,
@@ -227,7 +283,17 @@ begin
   repeat {rw matrix.mul_assoc A⁻¹},
   rw mul_nonsing_inv_cancel_left,
   rw mul_nonsing_inv_cancel_left,
+  
+  rw lemma_coercion_to_scalars,
+  apply one_add_row_mul_mat_col_inv, 
+  
   assumption',
+  -- letI hinvA := invertible_of_is_unit_det A hA,
+
+  apply left_mul_inj_of_invertible,
+  apply right_mul_inj_of_invertible,
+  simp only [det_unique, punit.default_eq_star, dmatrix.add_apply, one_apply_eq],
+  rw ←row_mul_mat_mul_col, apply is_unit_iff_ne_zero.2 habc, 
 end
 -- Checks
 
