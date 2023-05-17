@@ -160,3 +160,14 @@ begin
   }, exact p_nz,
 end
 
+lemma mat_minpoly_is_linmap_minpoly (A: matrix n n R) :
+  minpoly R A = minpoly R (to_lin' A) :=
+begin
+  sorry,
+end
+
+lemma root_minpoly_is_root_minpoly (A: matrix n n R) (μ: R):
+  (minpoly R A).is_root μ ↔ (minpoly R (to_lin' A)).is_root μ :=
+begin
+  sorry,
+end
