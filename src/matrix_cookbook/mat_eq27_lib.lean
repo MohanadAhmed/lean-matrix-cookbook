@@ -1,26 +1,14 @@
 import linear_algebra.matrix.trace
 import linear_algebra.matrix.determinant
 import data.matrix.notation
-import data.matrix.pequiv
-import data.matrix.block
 import data.fintype.big_operators
-import group_theory.perm.fin
-import group_theory.perm.sign
-import algebra.algebra.basic
 import tactic.ring
-import linear_algebra.alternating
-import linear_algebra.pi
 import tactic.norm_fin
 
-variables {R : Type*}
-
-open equiv equiv.perm finset function
-namespace matrix
 open_locale matrix big_operators
 open matrix
 
--- anyone looking at the cookbook likely only cares about fields anyway!
-variables [field R][group R]
+variables {R : Type*}[field R]
 
 lemma trace_a_fin4 {A : matrix (fin 4) (fin 4) R} :
   A.trace = A 0 0 + A 1 1 + A 2 2 + A 3 3 := 
@@ -66,8 +54,6 @@ begin
   repeat{rw mul_apply, rw fin.sum_univ_four},
   ring,
 end
-
-#eval (3: fin 4).succ_above 2
 
 lemma det4 {A : matrix (fin 4) (fin 4) R}:
 A.det = 
@@ -172,16 +158,18 @@ lemma eq_27_rhs_part1{A : matrix (fin 4) (fin 4) R}:
 (trace A)^3 - 3*trace A * trace (A^2) + 2 * trace (A^3) = 6*(A 0 0*A 1 1*A 2 2 - A 0 0*A 1 2*A 2 1 - A 0 1*A 1 0*A 2 2 + A 0 1*A 1 2*A 2 0 + A 0 2*A 1 0*A 2 1 - A 0 2*A 1 1*A 2 0 + A 0 0*A 1 1*A 3 3 - 
 A 0 0*A 1 3*A 3 1 - A 0 1*A 1 0*A 3 3 + A 0 1*A 1 3*A 3 0 + A 0 3*A 1 0*A 3 1 - A 0 3*A 1 1*A 3 0 + A 0 0*A 2 2*A 3 3 - A 0 0*A 2 3*A 3 2 - 
 A 0 2*A 2 0*A 3 3 + A 0 2*A 2 3*A 3 0 + A 0 3*A 2 0*A 3 2 - A 0 3*A 2 2*A 3 0 + A 1 1*A 2 2*A 3 3 - A 1 1*A 2 3*A 3 2 - A 1 2*A 2 1*A 3 3 + 
-A 1 2*A 2 3*A 3 1 + A 1 3*A 2 1*A 3 2 - A 1 3*A 2 2*A 3 1) := by {
+A 1 2*A 2 3*A 3 1 + A 1 3*A 2 1*A 3 2 - A 1 3*A 2 2*A 3 1) := 
+begin
   rw trace_a_fin4, rw trace_a_squared, rw trace_a_cubed, ring,
-}
+end
 
 lemma eq_27_rhs_part2{A : matrix (fin 4) (fin 4) R}:
 (trace A)^2 - trace (A^2) = 
   2*(A 0 0*A 1 1 - A 0 1*A 1 0 + A 0 0*A 2 2 - A 0 2*A 2 0 + A 0 0*A 3 3 - A 0 3*A 3 0 + 
-A 1 1*A 2 2 - A 1 2*A 2 1 + A 1 1*A 3 3 - A 1 3*A 3 1 + A 2 2*A 3 3 - A 2 3*A 3 2) := by {
+A 1 1*A 2 2 - A 1 2*A 2 1 + A 1 1*A 3 3 - A 1 3*A 3 1 + A 2 2*A 3 3 - A 2 3*A 3 2) := 
+begin 
   rw trace_a_all_squared, rw trace_a_squared, ring,
-}
+end
 
 
 lemma eq_27_rhs {A : matrix (fin 4) (fin 4) R}:
@@ -193,7 +181,8 @@ trace A + (1/2)*( (trace A)^2 - trace (A^2)) +
   A 0 0*A 1 1*A 2 2 - A 0 0*A 1 2*A 2 1 - A 0 1*A 1 0*A 2 2 + A 0 1*A 1 2*A 2 0 + A 0 2*A 1 0*A 2 1 - A 0 2*A 1 1*A 2 0 + A 0 0*A 1 1*A 3 3 - A 0 0*A 1 3*A 3 1 - 
   A 0 1*A 1 0*A 3 3 + A 0 1*A 1 3*A 3 0 + A 0 3*A 1 0*A 3 1 - A 0 3*A 1 1*A 3 0 + A 0 0*A 2 2*A 3 3 - A 0 0*A 2 3*A 3 2 - A 0 2*A 2 0*A 3 3 + A 0 2*A 2 3*A 3 0 + 
   A 0 3*A 2 0*A 3 2 - A 0 3*A 2 2*A 3 0 + A 1 1*A 2 2*A 3 3 - A 1 1*A 2 3*A 3 2 - A 1 2*A 2 1*A 3 3 + A 1 2*A 2 3*A 3 1 + A 1 3*A 2 1*A 3 2 - A 1 3*A 2 2*A 3 1
-:= begin
+:= 
+begin
   have m2 : (2:R)⁻¹*(2:R) = 1, {sorry,},
   have m6 : (6:R)⁻¹*(6:R) = 1, {sorry,},
   rw eq_27_rhs_part1, rw one_div (6:R), rw ← mul_assoc,  rw m6, rw one_mul,
@@ -211,14 +200,3 @@ begin
   rw eq_27_lhs, rw eq_27_rhs,
 end
 
-lemma eq_27 {A : matrix (fin 4) (fin 4) R} :
-  det (1 + A) = 1 + det A + trace A +  
-    (1/2)*( (trace A)^2 - trace (A^2)) + 
-    (1/6)*( (trace A)^3 - 3*trace A * trace (A^2) + 2 * trace (A^3) ) := 
-begin
-  repeat {rw add_assoc (1 + det A)}, rw ← sub_eq_iff_eq_add', rw add_comm (1:R) _,
-  rw sub_add_eq_sub_sub,
-  apply eq_27_before_last,
-end
-
-end matrix
