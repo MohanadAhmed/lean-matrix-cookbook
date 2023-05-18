@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   update_lean_xyz_branch_and_build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: Build project
     steps:
 
@@ -17,6 +17,19 @@ jobs:
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
+
+    - name: update-apt
+      run:  |
+        uname -a
+        apt-get update
+        apt-get install -y --no-install-recommends curl
+        apt-get install -y --no-install-recommends python3
+        apt-get install -y --no-install-recommends python3-pip
+        apt-get install -y --no-install-recommends python3-venv
+        apt-get install -y --no-install-recommends git
+        rm -f /etc/ssl/certs/ca-bundle.crt
+        apt reinstall -y --no-install-recommends ca-certificates 
+        update-ca-certificates
 
     - name: update branch
       if: github.ref == 'refs/heads/master'
@@ -32,10 +45,10 @@ jobs:
         curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- --default-toolchain none -y
         ~/.elan/bin/lean --version
         echo "$HOME/.elan/bin" >> $GITHUB_PATH
-    - name: install Python
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.8
+    # - name: install Python
+    #   uses: actions/setup-python@v1
+    #   with:
+    #     python-version: 3.10
 
     - name: Install leanproject
       run: |
@@ -51,10 +64,10 @@ jobs:
         ~/.elan/bin/lean --version
         echo "$HOME/.elan/bin" >> $GITHUB_PATH
 
-    - name: install Python
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.8
+    # - name: install Python
+    #   uses: actions/setup-python@v1
+    #   with:
+    #     python-version: 3.8
 
     - name: Install leanproject
       run: |
@@ -71,6 +84,7 @@ jobs:
 
     - name: Configure
       run: |
+        source ~/.profile
         leanpkg configure
         leanproject get-mathlib-cache
         leanproject get-cache --fallback=download-first || true
